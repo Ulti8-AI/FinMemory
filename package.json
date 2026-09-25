@@ -1,0 +1,13 @@
+{
+  "name": "finmemory",
+  "version": "2.0.0",
+  "private": true,
+  "description": "FinMemory full-stack personal finance diary",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

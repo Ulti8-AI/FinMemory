@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111827">
+<title>FinMemory — Your money, remembered.</title>
+<link rel="stylesheet" href="/styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="toast" class="toast"></div>
+
+<section id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <div class="brand-mark">FM</div>
+    <p class="eyebrow">FINMEMORY</p>
+    <h1>Your money,<br><span>remembered.</span></h1>
+    <p class="muted">A personal financial diary built around memory, patterns and planning.</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-auth="login">Log in</button>
+      <button class="auth-tab" data-auth="signup">Create account</button>
+    </div>
+    <form id="authForm">
+      <label>Email<input id="authEmail" type="email" required autocomplete="email" placeholder="you@example.com"></label>
+      <label>Password<input id="authPassword" type="password" required minlength="6" autocomplete="current-password" placeholder="At least 6 characters"></label>
+      <label id="nameWrap" class="hidden">Name<input id="authName" type="text" autocomplete="name" placeholder="What should FinMemory call you?"></label>
+      <button class="primary full" type="submit" id="authSubmit">Log in</button>
+    </form>
+    <p id="authMessage" class="auth-message"></p>
+    <p class="tiny">Your financial rows are protected by Supabase Row Level Security.</p>
+  </div>
+</section>
+
+<div id="appShell" class="app-shell hidden">
+<aside class="sidebar">
+  <div class="side-brand"><div class="brand-mark small">FM</div><div><strong>FinMemory</strong><span>Your money, remembered.</span></div></div>
+  <nav id="nav">
+    <button class="nav-item active" data-view="overview">◈ <span>Overview</span></button>
+    <button class="nav-item" data-view="diary">✦ <span>Money Diary</span></button>
+    <button class="nav-item" data-view="calendar">▦ <span>Money Calendar</span></button>
+    <button class="nav-item" data-view="replay">▶ <span>Money Replay</span></button>
+    <button class="nav-item" data-view="patterns">⌁ <span>Patterns</span></button>
+    <button class="nav-item" data-view="detective">⌕ <span>Money Detective</span></button>
+    <button class="nav-item" data-view="forecast">↗ <span>Forecast</span></button>
+    <button class="nav-item" data-view="budgets">◫ <span>Budgets</span></button>
+    <button class="nav-item" data-view="goals">◎ <span>Goals</span></button>
+    <button class="nav-item" data-view="recurring">↻ <span>Recurring</span></button>
+    <button class="nav-item" data-view="assistant">✺ <span>Money Assistant</span></button>
+    <button class="nav-item" data-view="settings">⚙ <span>Settings</span></button>
+  </nav>
+  <div class="side-bottom"><button class="quick primary full" id="quickAdd">+ Record money</button><button class="ghost full" id="logout">Log out</button></div>
+</aside>
+
+<main class="main">
+<header class="topbar">
+  <div><p class="eyebrow">FINANCIAL DIARY</p><h2 id="pageTitle">Overview</h2></div>
+  <div class="top-actions"><span id="userEmail" class="user-pill"></span><button class="icon-btn" id="mobileAdd">+</button></div>
+</header>
+<div id="content" class="content"></div>
+</main>
+</div>
+
+<div id="transactionModal" class="modal hidden">
+<div class="modal-card">
+  <div class="modal-head"><div><p class="eyebrow">MONEY MEMORY</p><h3>Record money</h3></div><button class="close" data-close="transactionModal">×</button></div>
+  <form id="transactionForm">
+    <div class="type-switch"><button type="button" class="type-btn active" data-type="expense">Expense</button><button type="button" class="type-btn" data-type="income">Income</button></div>
+    <div class="form-grid">
+      <label>Amount<input id="txAmount" type="number" step="0.01" min="0" required placeholder="0.00"></label>
+      <label>Date<input id="txDate" type="date" required></label>
+    </div>
+    <label>What was it?<input id="txTitle" required placeholder="e.g. Lunch with friends"></label>
+    <label>Category<select id="txCategory"></select></label>
+    <label>Note <span class="muted">(optional)</span><textarea id="txNote" rows="3" placeholder="Add the context you want your future self to remember…"></textarea></label>
+    <label>Tags <span class="muted">(optional)</span><input id="txTags" placeholder="school, weekend, important"></label>
+    <div class="modal-actions"><button type="button" class="ghost" data-close="transactionModal">Cancel</button><button class="primary" type="submit">Save memory</button></div>
+  </form>
+</div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>
