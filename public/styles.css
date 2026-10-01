@@ -847,3 +847,165 @@
 .transaction-edit:hover{
   background:#eef0ff;
 }
+/* ---------- EDIT TRANSACTION MODAL ---------- */
+
+.fm-edit-modal{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  background:#17203366;
+  backdrop-filter:blur(7px);
+}
+
+.fm-edit-box{
+  width:min(520px,100%);
+  max-height:min(720px,calc(100vh - 40px));
+  overflow:auto;
+  background:#fff;
+  border:1px solid #e8ebf1;
+  border-radius:26px;
+  padding:26px;
+  box-shadow:0 30px 90px #17203328;
+}
+
+.fm-edit-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:24px;
+}
+
+.fm-edit-head h3{
+  margin:0;
+  color:#202638;
+  font-size:21px;
+  letter-spacing:-.3px;
+}
+
+.fm-edit-head p{
+  margin:6px 0 0;
+  color:#8b93a3;
+  font-size:13px;
+}
+
+.fm-edit-close{
+  width:38px;
+  height:38px;
+  border:0;
+  border-radius:12px;
+  background:#f3f4f7;
+  color:#697184;
+  font-size:22px;
+  cursor:pointer;
+  transition:.18s ease;
+}
+
+.fm-edit-close:hover{
+  background:#e9ebf0;
+  transform:rotate(4deg);
+}
+
+#editTxForm{
+  display:grid;
+  gap:17px;
+}
+
+#editTxForm label{
+  display:grid;
+  gap:8px;
+  color:#3b4457;
+  font-size:12px;
+  font-weight:750;
+}
+
+#editTxForm input,
+#editTxForm select{
+  width:100%;
+  box-sizing:border-box;
+  min-height:48px;
+  padding:0 14px;
+  border:1px solid #e1e5ec;
+  border-radius:14px;
+  background:#fafbfc;
+  color:#252b3a;
+  font:inherit;
+  font-size:14px;
+  outline:none;
+  transition:.18s ease;
+}
+
+#editTxForm input:focus,
+#editTxForm select:focus{
+  border-color:#7b84ff;
+  background:#fff;
+  box-shadow:0 0 0 4px #7b84ff12;
+}
+
+#editTxForm select{
+  appearance:none;
+  cursor:pointer;
+  padding-right:42px;
+  background-image:
+    linear-gradient(45deg,transparent 50%,#7b84ff 50%),
+    linear-gradient(135deg,#7b84ff 50%,transparent 50%);
+  background-position:
+    calc(100% - 19px) 21px,
+    calc(100% - 13px) 21px;
+  background-size:6px 6px;
+  background-repeat:no-repeat;
+}
+
+.fm-edit-save{
+  width:100%;
+  min-height:50px;
+  margin-top:5px;
+  border-radius:14px;
+  font-size:14px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+/* ---------- TRANSACTION ACTIONS ---------- */
+
+.transaction-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.transaction-edit,
+.transaction-delete{
+  border:0;
+  border-radius:11px;
+  padding:8px 11px;
+  font-size:11px;
+  font-weight:750;
+  cursor:pointer;
+  transition:.18s ease;
+}
+
+.transaction-edit{
+  background:#eef0ff;
+  color:#6874f5;
+}
+
+.transaction-edit:hover{
+  background:#e2e5ff;
+  transform:translateY(-1px);
+}
+
+.transaction-delete{
+  background:#f4f5f7;
+  color:#777f90;
+}
+
+.transaction-delete:hover{
+  background:#ffecec;
+  color:#c44;
+  transform:translateY(-1px);
+}
