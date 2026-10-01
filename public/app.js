@@ -2099,12 +2099,11 @@ if(e.target.closest("[data-edit-tx]")){
 
   const modal=document.createElement("div");
 
-  modal.className="fm-goal-modal";
+  modal.className="fm-edit-modal";
 
-  modal.innerHTML=`
-    <div class="fm-goal-box">
-
-      <div class="fm-goal-head">
+   modal.innerHTML=`
+    <div class="fm-edit-box">
+       <div class="fm-edit-head">
 
         <div>
           <h3>Edit money memory</h3>
@@ -2113,7 +2112,7 @@ if(e.target.closest("[data-edit-tx]")){
 
         <button
           type="button"
-          class="fm-goal-close"
+           class="fm-edit-close"
           data-edit-close
         >
           ×
@@ -2185,7 +2184,7 @@ if(e.target.closest("[data-edit-tx]")){
 
         <button
           type="submit"
-          class="primary fm-goal-save"
+           class="primary fm-edit-save"
         >
           Save changes
         </button>
