@@ -1580,19 +1580,19 @@ async function saveTx(){
     */
     if(category==="Other"){
 
-      const custom=prompt(
-        "What was this spending for?"
-      );
+  const custom=$("txTitle").value.trim();
 
-      if(custom===null){
-        return;
-      }
+  if(!custom){
 
-      if(custom.trim()){
-        category=custom.trim();
-      }
-    }
+    return toast(
+      "Add a title describing what this spending was for."
+    );
 
+  }
+
+  category=custom;
+
+}
     const row={
       user_id:user.id,
       type:currentType,
