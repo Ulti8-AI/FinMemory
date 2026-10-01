@@ -2285,61 +2285,110 @@ if(e.target.closest("[data-delete-tx]")){
 
   return;
 }
-  if(e.target.closest(".goal-add-money")){
+   if(e.target.closest("[data-edit-tx]")){
 
-  const button=e.target.closest(".goal-add-money");
-  const goalId=button.dataset.goalId;
+  const button=e.target.closest("[data-edit-tx]");
+  const id=button.dataset.editTx;
 
-  const goal=state.goals.find(
-    g=>String(g.id)===String(goalId)
+  const tx=state.transactions.find(
+    x=>String(x.id)===String(id)
   );
 
-  if(!goal){
-    return toast("Goal not found.");
+  if(!tx){
+    return toast("Transaction not found.");
   }
 
   const modal=document.createElement("div");
 
-  modal.className="fm-goal-modal";
+  modal.className="fm-edit-modal";
 
   modal.innerHTML=`
-    <div class="fm-goal-box">
+    <div class="fm-edit-box">
 
-      <div class="fm-goal-head">
+      <div class="fm-edit-head">
+
         <div>
-          <h3>Add money to goal</h3>
-          <p>${esc(goal.name)}</p>
+          <h3>Edit money memory</h3>
+          <p>Update this memory.</p>
         </div>
 
         <button
           type="button"
-          class="fm-goal-close"
-          data-goal-close
+          class="fm-edit-close"
+          data-edit-close
         >
           ×
         </button>
+
       </div>
 
-      <form id="goalMoneyForm">
+      <form id="editTxForm">
 
         <label>
-          Amount to add
+          Title
 
           <input
-            id="goalMoneyAmount"
+            id="editTxTitle"
+            type="text"
+            value="${esc(tx.title||"")}"
+            required
+          >
+        </label>
+
+        <label>
+          Amount
+
+          <input
+            id="editTxAmount"
             type="number"
             min="0.01"
             step="0.01"
-            placeholder="e.g. 10000"
+            value="${Number(tx.amount||0)}"
             required
+          >
+        </label>
+
+        <label>
+          Date
+
+          <input
+            id="editTxDate"
+            type="date"
+            value="${esc(tx.transaction_date||"")}"
+            required
+          >
+        </label>
+
+        <label>
+          Category
+
+          <select id="editTxCategory">
+            ${cats().map(c=>`
+              <option
+                value="${esc(c.name)}"
+                ${c.name===tx.category?"selected":""}
+              >
+                ${esc(c.name)}
+              </option>
+            `).join("")}
+          </select>
+        </label>
+
+        <label>
+          Note
+
+          <input
+            id="editTxNote"
+            type="text"
+            value="${esc(tx.note||"")}"
           >
         </label>
 
         <button
           type="submit"
-          class="primary fm-goal-save"
+          class="primary fm-edit-save"
         >
-          Add money
+          Save changes
         </button>
 
       </form>
@@ -2349,12 +2398,13 @@ if(e.target.closest("[data-delete-tx]")){
 
   document.body.appendChild(modal);
 
-  const form=modal.querySelector("#goalMoneyForm");
-  const close=modal.querySelector("[data-goal-close]");
+  const form=modal.querySelector("#editTxForm");
 
-  close.addEventListener("click",()=>{
-    modal.remove();
-  });
+  modal
+    .querySelector("[data-edit-close]")
+    .addEventListener("click",()=>{
+      modal.remove();
+    });
 
   modal.addEventListener("click",e=>{
     if(e.target===modal){
@@ -2366,34 +2416,49 @@ if(e.target.closest("[data-delete-tx]")){
 
     e.preventDefault();
 
+    const title=
+      modal.querySelector("#editTxTitle")
+        .value.trim();
+
     const amount=Number(
-      modal.querySelector("#goalMoneyAmount").value
+      modal.querySelector("#editTxAmount").value
     );
 
-    if(amount<=0){
-      return toast("Enter a valid amount.");
+    const transaction_date=
+      modal.querySelector("#editTxDate").value;
+
+    const category=
+      modal.querySelector("#editTxCategory").value;
+
+    const note=
+      modal.querySelector("#editTxNote")
+        .value.trim() || null;
+
+    if(!title||amount<=0||!transaction_date){
+
+      return toast(
+        "Check the transaction details."
+      );
     }
 
-    const newSaved=
-      Number(goal.saved_amount||0)+amount;
-
     const {error}=await sb
-      .from("goals")
+      .from("transactions")
       .update({
-        saved_amount:newSaved
+        title,
+        amount,
+        transaction_date,
+        category,
+        note
       })
-      .eq("id",goalId);
+      .eq("id",id);
 
     if(error){
-
-      toast(error.message);
-
-      return;
+      return toast(error.message);
     }
 
     modal.remove();
 
-    toast("Money added to your goal.");
+    toast("Money memory updated.");
 
     await refresh();
 
