@@ -2105,7 +2105,6 @@ if(e.target.closest("[data-delete-tx]")){
   if(e.target.closest(".goal-add-money")){
 
   const button=e.target.closest(".goal-add-money");
-
   const goalId=button.dataset.goalId;
 
   const goal=state.goals.find(
@@ -2116,35 +2115,106 @@ if(e.target.closest("[data-delete-tx]")){
     return toast("Goal not found.");
   }
 
-  const amount=Number(
-    prompt(`How much do you want to add to "${goal.name}"?`)
-  );
+  const modal=document.createElement("div");
 
-  if(!amount||amount<=0){
-    return;
-  }
+  modal.className="fm-goal-modal";
 
-  const newSaved=
-    Number(goal.saved_amount||0)+amount;
+  modal.innerHTML=`
+    <div class="fm-goal-box">
 
-  const {error}=await sb
-    .from("goals")
-    .update({
-      saved_amount:newSaved
-    })
-    .eq("id",goalId);
+      <div class="fm-goal-head">
+        <div>
+          <h3>Add money to goal</h3>
+          <p>${esc(goal.name)}</p>
+        </div>
 
-  if(error){
+        <button
+          type="button"
+          class="fm-goal-close"
+          data-goal-close
+        >
+          ×
+        </button>
+      </div>
 
-    toast(error.message);
+      <form id="goalMoneyForm">
 
-  }else{
+        <label>
+          Amount to add
+
+          <input
+            id="goalMoneyAmount"
+            type="number"
+            min="0.01"
+            step="0.01"
+            placeholder="e.g. 10000"
+            required
+          >
+        </label>
+
+        <button
+          type="submit"
+          class="primary fm-goal-save"
+        >
+          Add money
+        </button>
+
+      </form>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const form=modal.querySelector("#goalMoneyForm");
+  const close=modal.querySelector("[data-goal-close]");
+
+  close.addEventListener("click",()=>{
+    modal.remove();
+  });
+
+  modal.addEventListener("click",e=>{
+    if(e.target===modal){
+      modal.remove();
+    }
+  });
+
+  form.addEventListener("submit",async e=>{
+
+    e.preventDefault();
+
+    const amount=Number(
+      modal.querySelector("#goalMoneyAmount").value
+    );
+
+    if(amount<=0){
+      return toast("Enter a valid amount.");
+    }
+
+    const newSaved=
+      Number(goal.saved_amount||0)+amount;
+
+    const {error}=await sb
+      .from("goals")
+      .update({
+        saved_amount:newSaved
+      })
+      .eq("id",goalId);
+
+    if(error){
+
+      toast(error.message);
+
+      return;
+    }
+
+    modal.remove();
 
     toast("Money added to your goal.");
 
     await refresh();
 
-  }
+  });
 
   return;
 }
