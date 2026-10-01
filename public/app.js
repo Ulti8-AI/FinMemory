@@ -731,68 +731,122 @@ views.recurring=()=>`
 
 /* ---------- CALCULATOR ---------- */
 
-views.calculator=()=>`
-  <div class="grid two">
+ views.calculator=()=>`
+  <div class="calculator-layout">
 
-    <div class="card">
+    <div class="calculator-card">
+      <div class="calculator-header">
+        <div>
+          <p class="eyebrow">MONEY TOOL</p>
+          <h3>Quick Calculator</h3>
+          <p class="calculator-subtitle">
+            Simple calculations without leaving FinMemory.
+          </p>
+        </div>
 
-      <h3>Quick Calculator</h3>
-
-      <p class="muted">
-        Do everyday money calculations without leaving FinMemory.
-      </p>
-
-      <label>
-        First number
-        <input id="calcA" type="number" step="any" placeholder="0">
-      </label>
-
-      <label>
-        Operation
-        <select id="calcOp">
-          <option value="+">Add</option>
-          <option value="-">Subtract</option>
-          <option value="*">Multiply</option>
-          <option value="/">Divide</option>
-          <option value="%">Percentage of</option>
-        </select>
-      </label>
-
-      <label>
-        Second number
-        <input id="calcB" type="number" step="any" placeholder="0">
-      </label>
-
-      <button class="primary" id="calculateBtn">
-        Calculate
-      </button>
-
-      <div id="calcResult" class="assistant-answer">
-        Your result will appear here.
+        <div class="calculator-icon">＋</div>
       </div>
 
-    </div>
+      <div class="calculator-fields">
 
-    <div class="card">
+        <div class="calc-field">
+          <label for="calcA">First number</label>
+          <input
+            class="calc-input"
+            id="calcA"
+            type="number"
+            step="any"
+            placeholder="0"
+          >
+        </div>
 
-      <h3>Money tools</h3>
+        <div class="calc-field">
+          <label for="calcOp">Operation</label>
 
-      <label>
-        Amount
-        <input id="calcMoney" type="number" step="any" placeholder="0">
-      </label>
+          <select id="calcOp" class="calc-input">
+            <option value="+">＋ Add</option>
+            <option value="-">− Subtract</option>
+            <option value="*">× Multiply</option>
+            <option value="/">÷ Divide</option>
+            <option value="%">% Percentage of</option>
+          </select>
+        </div>
 
-      <label>
-        Percentage
-        <input id="calcPercent" type="number" step="any" placeholder="10">
-      </label>
+        <div class="calc-field">
+          <label for="calcB">Second number</label>
+          <input
+            class="calc-input"
+            id="calcB"
+            type="number"
+            step="any"
+            placeholder="0"
+          >
+        </div>
 
-      <button class="ghost" id="discountBtn">
-        Calculate percentage
+      </div>
+
+      <button class="calc-button" id="calculateBtn">
+        Calculate
+        <span>→</span>
       </button>
 
-      <div id="discountResult" class="assistant-answer">
-        Useful for discounts, fees and simple estimates.
+      <div id="calcResult" class="calc-result">
+        <span class="calc-result-label">RESULT</span>
+        <strong>Ready when you are</strong>
+        <small>Enter your numbers and choose an operation.</small>
+      </div>
+    </div>
+
+
+    <div class="calculator-card tools-card">
+
+      <div class="calculator-header">
+        <div>
+          <p class="eyebrow">MONEY TOOL</p>
+          <h3>Percentage Tool</h3>
+          <p class="calculator-subtitle">
+            Useful for discounts, fees and quick estimates.
+          </p>
+        </div>
+
+        <div class="calculator-icon">%</div>
+      </div>
+
+      <div class="calculator-fields">
+
+        <div class="calc-field">
+          <label for="calcMoney">Amount</label>
+          <input
+            class="calc-input"
+            id="calcMoney"
+            type="number"
+            step="any"
+            placeholder="0.00"
+          >
+        </div>
+
+        <div class="calc-field">
+          <label for="calcPercent">Percentage</label>
+          <input
+            class="calc-input"
+            id="calcPercent"
+            type="number"
+            step="any"
+            placeholder="10"
+          >
+        </div>
+
+      </div>
+
+      <button class="calc-secondary-button" id="discountBtn">
+        Calculate percentage
+        <span>→</span>
+      </button>
+
+      <div id="discountResult" class="calc-result secondary-result">
+        <span class="calc-result-label">RESULT</span>
+        <strong>Nothing calculated yet</strong>
+        <small>Enter an amount and percentage above.</small>
       </div>
 
     </div>
@@ -871,132 +925,213 @@ views.assistant=()=>`
 
 /* ---------- SETTINGS ---------- */
 
-views.settings=()=>`
-  <div class="grid two">
+ views.settings=()=>`
+  <div class="settings-layout">
 
-    <div class="card">
+    <div class="settings-intro">
+      <div>
+        <p class="eyebrow">PERSONAL SPACE</p>
+        <h3>Settings</h3>
+        <p>
+          Make FinMemory feel like your own financial workspace.
+        </p>
+      </div>
+    </div>
 
-      <div class="card-head">
+
+    <div class="settings-card settings-profile-card">
+
+      <div class="settings-card-head">
+        <div class="settings-icon">◎</div>
+
         <div>
           <h3>Your profile</h3>
-          <p class="muted">
-            Personalize how FinMemory works for you.
+          <p>
+            Personalize your FinMemory account.
           </p>
         </div>
       </div>
 
-      <label>
-        Display name
-        <input
-          id="profileName"
-          value="${esc(state.profile?.display_name||"")}"
-          placeholder="Your name"
-        >
-      </label>
+      <div class="settings-fields">
 
-      <label>
-        Currency
+        <div class="settings-field">
+          <label for="profileName">Display name</label>
 
-        <select id="profileCurrency">
-          ${
-            ["NGN","USD","GBP","EUR","GHS","KES","ZAR"]
-              .map(c=>`
-                <option
-                  ${state.profile?.currency===c?"selected":""}
-                >
-                  ${c}
-                </option>
-              `).join("")
-          }
-        </select>
+          <input
+            id="profileName"
+            value="${esc(state.profile?.display_name||"")}"
+            placeholder="Your name"
+          >
 
-      </label>
+          <small>
+            This is the name FinMemory will use for you.
+          </small>
+        </div>
 
-      <button class="primary" id="saveProfile">
-        Save profile
-      </button>
+
+        <div class="settings-field">
+          <label for="profileCurrency">Currency</label>
+
+          <select id="profileCurrency">
+
+            <option value="NGN" ${state.profile?.currency==="NGN"?"selected":""}>
+              NGN — Nigerian Naira
+            </option>
+
+            <option value="USD" ${state.profile?.currency==="USD"?"selected":""}>
+              USD — US Dollar
+            </option>
+
+            <option value="GBP" ${state.profile?.currency==="GBP"?"selected":""}>
+              GBP — British Pound
+            </option>
+
+            <option value="EUR" ${state.profile?.currency==="EUR"?"selected":""}>
+              EUR — Euro
+            </option>
+
+            <option value="GHS" ${state.profile?.currency==="GHS"?"selected":""}>
+              GHS — Ghanaian Cedi
+            </option>
+
+            <option value="KES" ${state.profile?.currency==="KES"?"selected":""}>
+              KES — Kenyan Shilling
+            </option>
+
+            <option value="ZAR" ${state.profile?.currency==="ZAR"?"selected":""}>
+              ZAR — South African Rand
+            </option>
+
+          </select>
+
+          <small>
+            FinMemory uses this when displaying your money.
+          </small>
+        </div>
+
+      </div>
+
+      <div class="settings-card-actions">
+        <button class="settings-save" id="saveProfile">
+          Save profile
+          <span>→</span>
+        </button>
+      </div>
 
     </div>
 
 
-    <div class="card">
+    <div class="settings-grid">
 
-      <div class="card-head">
+
+      <div class="settings-card">
+
+        <div class="settings-card-head">
+          <div class="settings-icon">▣</div>
+
+          <div>
+            <h3>Your data</h3>
+            <p>
+              Your financial history at a glance.
+            </p>
+          </div>
+        </div>
+
+        <div class="settings-stats">
+
+          <div class="settings-stat">
+            <strong>${state.transactions.length}</strong>
+            <span>Money memories</span>
+          </div>
+
+          <div class="settings-stat">
+            <strong>${cats().length}</strong>
+            <span>Categories</span>
+          </div>
+
+        </div>
+
+        <button class="settings-outline-button" id="exportData">
+          Export my data
+          <span>↓</span>
+        </button>
+
+      </div>
+
+
+      <div class="settings-card">
+
+        <div class="settings-card-head">
+          <div class="settings-icon">✦</div>
+
+          <div>
+            <h3>FinMemory</h3>
+            <p>
+              Built around remembering your money.
+            </p>
+          </div>
+        </div>
+
+        <div class="settings-info">
+
+          <div>
+            <span>Account</span>
+            <strong>${esc($("userEmail")?.textContent||"Signed in")}</strong>
+          </div>
+
+          <div>
+            <span>Security</span>
+            <strong>Protected with Supabase RLS</strong>
+          </div>
+
+        </div>
+
+      </div>
+
+
+    </div>
+
+
+    <div class="settings-card">
+
+      <div class="settings-card-head">
+        <div class="settings-icon">⌁</div>
+
         <div>
-          <h3>Your data</h3>
-          <p class="muted">
-            Keep a copy of your financial history.
+          <h3>Quick access</h3>
+          <p>
+            Jump directly to your most-used tools.
           </p>
         </div>
       </div>
 
-      <div class="finding">
-        <b>Financial records</b>
-        <span class="muted">
-          ${state.transactions.length} saved memories
-        </span>
-      </div>
+      <div class="settings-tools">
 
-      <div class="finding">
-        <b>Categories</b>
-        <span class="muted">
-          ${cats().length} available categories
-        </span>
-      </div>
-
-      <button class="ghost" id="exportData">
-        Export my data
-      </button>
-
-    </div>
-
-
-    <div class="card">
-
-      <h3>About FinMemory</h3>
-
-      <p class="muted">
-        FinMemory is designed around remembering your money,
-        finding patterns and making better-informed plans.
-      </p>
-
-      <div class="finding">
-        <b>Account</b>
-        <span class="muted">
-          ${esc($("userEmail")?.textContent||"Signed in")}
-        </span>
-      </div>
-
-      <div class="finding">
-        <b>Security</b>
-        <span class="muted">
-          Your financial rows are protected by Supabase Row Level Security.
-        </span>
-      </div>
-
-    </div>
-
-
-    <div class="card">
-
-      <h3>FinMemory tools</h3>
-
-      <p class="muted">
-        Quickly jump to the tools you use most.
-      </p>
-
-      <div class="toolbar">
-
-        <button class="ghost" id="settingsDiary">
-          Money Diary
+        <button class="settings-tool" id="settingsDiary">
+          <span>✦</span>
+          <div>
+            <strong>Money Diary</strong>
+            <small>Review your financial memories</small>
+          </div>
+          <b>→</b>
         </button>
 
-        <button class="ghost" id="settingsCalendar">
-          Calendar
+        <button class="settings-tool" id="settingsCalendar">
+          <span>▦</span>
+          <div>
+            <strong>Money Calendar</strong>
+            <small>See your spending across time</small>
+          </div>
+          <b>→</b>
         </button>
 
-        <button class="ghost" id="settingsCalculator">
-          Calculator
+        <button class="settings-tool" id="settingsCalculator">
+          <span>＋</span>
+          <div>
+            <strong>Money Calculator</strong>
+            <small>Run quick financial calculations</small>
+          </div>
+          <b>→</b>
         </button>
 
       </div>
@@ -1005,7 +1140,6 @@ views.settings=()=>`
 
   </div>
 `;
-
 
 /* ---------- TRANSACTION ---------- */
 
