@@ -365,9 +365,16 @@ function bars(data){
 
         <button
           type="button"
+          class="transaction-edit"
+          data-edit-tx="${esc(t.id)}"
+        >
+          Edit
+        </button>
+
+        <button
+          type="button"
           class="transaction-delete"
           data-delete-tx="${esc(t.id)}"
-          title="Delete transaction"
         >
           Delete
         </button>
@@ -377,7 +384,6 @@ function bars(data){
     </div>
   `;
 }
-
 async function refresh(){
   try{
     await load();
@@ -2078,7 +2084,185 @@ document.addEventListener("click",async e=>{
 
     return;
   }
+if(e.target.closest("[data-edit-tx]")){
 
+  const button=e.target.closest("[data-edit-tx]");
+  const id=button.dataset.editTx;
+
+  const tx=state.transactions.find(
+    x=>String(x.id)===String(id)
+  );
+
+  if(!tx){
+    return toast("Transaction not found.");
+  }
+
+  const modal=document.createElement("div");
+
+  modal.className="fm-goal-modal";
+
+  modal.innerHTML=`
+    <div class="fm-goal-box">
+
+      <div class="fm-goal-head">
+
+        <div>
+          <h3>Edit money memory</h3>
+          <p>Update the details of this memory.</p>
+        </div>
+
+        <button
+          type="button"
+          class="fm-goal-close"
+          data-edit-close
+        >
+          ×
+        </button>
+
+      </div>
+
+      <form id="editTxForm">
+
+        <label>
+          Title
+
+          <input
+            id="editTxTitle"
+            type="text"
+            value="${esc(tx.title||"")}"
+            required
+          >
+        </label>
+
+        <label>
+          Amount
+
+          <input
+            id="editTxAmount"
+            type="number"
+            min="0.01"
+            step="0.01"
+            value="${Number(tx.amount||0)}"
+            required
+          >
+        </label>
+
+        <label>
+          Date
+
+          <input
+            id="editTxDate"
+            type="date"
+            value="${esc(tx.transaction_date||"")}"
+            required
+          >
+        </label>
+
+        <label>
+          Category
+
+          <select id="editTxCategory">
+            ${cats().map(c=>`
+              <option
+                value="${esc(c.name)}"
+                ${c.name===tx.category?"selected":""}
+              >
+                ${esc(c.name)}
+              </option>
+            `).join("")}
+          </select>
+        </label>
+
+        <label>
+          Note
+
+          <input
+            id="editTxNote"
+            type="text"
+            value="${esc(tx.note||"")}"
+          >
+        </label>
+
+        <button
+          type="submit"
+          class="primary fm-goal-save"
+        >
+          Save changes
+        </button>
+
+      </form>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const form=modal.querySelector("#editTxForm");
+
+  modal.querySelector("[data-edit-close]")
+    .addEventListener("click",()=>{
+      modal.remove();
+    });
+
+  modal.addEventListener("click",e=>{
+    if(e.target===modal){
+      modal.remove();
+    }
+  });
+
+  form.addEventListener("submit",async e=>{
+
+    e.preventDefault();
+
+    const title=
+      modal.querySelector("#editTxTitle")
+        .value.trim();
+
+    const amount=Number(
+      modal.querySelector("#editTxAmount").value
+    );
+
+    const transaction_date=
+      modal.querySelector("#editTxDate").value;
+
+    const category=
+      modal.querySelector("#editTxCategory").value;
+
+    const note=
+      modal.querySelector("#editTxNote")
+        .value.trim() || null;
+
+    if(!title || amount<=0 || !transaction_date){
+      return toast("Check the transaction details.");
+    }
+
+    const {error}=await sb
+      .from("transactions")
+      .update({
+        title,
+        amount,
+        transaction_date,
+        category,
+        note
+      })
+      .eq("id",id);
+
+    if(error){
+
+      return toast(error.message);
+
+    }
+
+    modal.remove();
+
+    toast("Money memory updated.");
+
+    await refresh();
+
+  });
+
+  return;
+}
 if(e.target.closest("[data-delete-tx]")){
 
   const button=e.target.closest("[data-delete-tx]");
