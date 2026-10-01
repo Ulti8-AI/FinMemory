@@ -340,11 +340,16 @@ function bars(data){
   `;
 }
 
-function txRow(t){
+ function txRow(t){
+
   return `
-    <div class="list-row">
+    <div class="list-row transaction-row">
+
       <div>
-        <div class="row-title">${esc(t.title)}</div>
+        <div class="row-title">
+          ${esc(t.title)}
+        </div>
+
         <div class="row-sub">
           ${dateText(t.transaction_date)}
           · ${esc(t.category)}
@@ -352,9 +357,23 @@ function txRow(t){
         </div>
       </div>
 
-      <div class="amount ${t.type==="income"?"positive":"negative"}">
-        ${t.type==="income"?"+":"−"}${money(t.amount)}
+      <div class="transaction-actions">
+
+        <div class="amount ${t.type==="income"?"positive":"negative"}">
+          ${t.type==="income"?"+":"−"}${money(t.amount)}
+        </div>
+
+        <button
+          type="button"
+          class="transaction-delete"
+          data-delete-tx="${esc(t.id)}"
+          title="Delete transaction"
+        >
+          Delete
+        </button>
+
       </div>
+
     </div>
   `;
 }
@@ -1849,7 +1868,29 @@ document.addEventListener("click",async e=>{
     return;
   }
 
+if(e.target.closest("[data-delete-tx]")){
 
+  const button=e.target.closest("[data-delete-tx]");
+  const id=button.dataset.deleteTx;
+
+  const {error}=await sb
+    .from("transactions")
+    .delete()
+    .eq("id",id);
+
+  if(error){
+
+    toast(error.message);
+
+  }else{
+
+    toast("Money memory deleted.");
+
+    await refresh();
+  }
+
+  return;
+}
    if(e.target.id==="addBudget"){
 
   const modal=document.createElement("div");
