@@ -1889,44 +1889,130 @@ document.addEventListener("click",async e=>{
   }
 
 
-  if(e.target.id==="addGoal"){
+   if(e.target.id==="addGoal"){
 
-    const name=prompt(
-      "What is the name of your goal?"
-    );
+  const modal=document.createElement("div");
+
+  modal.className="fm-goal-modal";
+
+  modal.innerHTML=`
+    <div class="fm-goal-box">
+
+      <div class="fm-goal-head">
+        <div>
+          <h3>Create a savings goal</h3>
+          <p>Give your goal a name and target.</p>
+        </div>
+
+        <button
+          type="button"
+          class="fm-goal-close"
+          data-goal-close
+        >
+          ×
+        </button>
+      </div>
+
+      <form id="goalForm">
+
+        <label>
+          Goal name
+          <input
+            id="goalName"
+            type="text"
+            placeholder="e.g. New laptop"
+            required
+          >
+        </label>
+
+        <label>
+          Target amount
+          <input
+            id="goalAmount"
+            type="number"
+            min="0.01"
+            step="0.01"
+            placeholder="e.g. 250000"
+            required
+          >
+        </label>
+
+        <button
+          type="submit"
+          class="primary fm-goal-save"
+        >
+          Create goal
+        </button>
+
+      </form>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const form=modal.querySelector("#goalForm");
+  const close=modal.querySelector("[data-goal-close]");
+
+  close.addEventListener("click",()=>{
+    modal.remove();
+  });
+
+  modal.addEventListener("click",e=>{
+    if(e.target===modal){
+      modal.remove();
+    }
+  });
+
+  form.addEventListener("submit",async e=>{
+
+    e.preventDefault();
+
+    const name=
+      modal.querySelector("#goalName")
+        .value.trim();
 
     const amount=Number(
-      prompt("What is the target amount?")
+      modal.querySelector("#goalAmount")
+        .value
     );
 
-    if(name&&amount>0){
+    if(!name||amount<=0){
 
-      const user=
-        (await sb.auth.getUser()).data.user;
+      toast("Enter a goal name and a valid target amount.");
 
-      const {error}=await sb
-        .from("goals")
-        .insert({
-          user_id:user.id,
-          name,
-          target_amount:amount,
-          saved_amount:0
-        });
-
-      if(error){
-
-        toast(error.message);
-
-      }else{
-
-        toast("Goal added.");
-
-        await refresh();
-      }
+      return;
     }
 
-    return;
-  }
+    const user=
+      (await sb.auth.getUser()).data.user;
+
+    const {error}=await sb
+      .from("goals")
+      .insert({
+        user_id:user.id,
+        name,
+        target_amount:amount,
+        saved_amount:0
+      });
+
+    if(error){
+
+      toast(error.message);
+
+      return;
+    }
+
+    modal.remove();
+
+    toast("Goal added.");
+
+    await refresh();
+
+  });
+
+  return;
+}
 
 });
 
