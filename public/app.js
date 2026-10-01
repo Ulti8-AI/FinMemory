@@ -36,14 +36,34 @@ async function load(){
   state.profile=q[0].data||{id:uid,display_name:"",currency:"NGN"};state.transactions=q[1].data||[];state.categories=q[2].data||[];state.budgets=q[3].data||[];state.goals=q[4].data||[];
   if(!q[0].data)await sb.from("profiles").insert(state.profile);
 }
-async function refresh(){await load();render()}
-function stat(a,b,c=""){return `<div class="stat"><div class="label">${a}</div><div class="value ${c}">${b}</div></div>`}
-function txRow(t){return `<div class="row"><div class="row-main"><div class="row-title">${esc(t.title)}</div><div class="row-sub">${esc(t.category)} · ${dateText(t.transaction_date)}</div></div><div class="amount ${t.type==="income"?"positive":"negative"}">${t.type==="income"?"+":"−"}${money(t.amount)}</div></div>`}
-function bars(o){let a=Object.entries(o).sort((x,y)=>y[1]-x[1]).slice(0,7);if(!a.length)return `<div class="empty">No spending yet.</div>`;let m=a[0][1];return `<div class="bars">${a.map(([k,v])=>`<div class="bar-line"><span>${esc(k)}</span><div class="bar"><i style="width:${Math.max(4,v/m*100)}%"></i></div><strong>${money(v)}</strong></div>`).join("")}</div>`}
-function render(){
-  const titles={overview:"Overview",diary:"Money Diary",calendar:"Money Calendar",replay:"Money Replay",patterns:"Patterns",detective:"Money Detective",forecast:"Forecast",budgets:"Budgets",goals:"Goals",recurring:"Recurring",assistant:"Money Assistant",settings:"Settings"};
-  $("pageTitle").textContent=titles[currentView]||"Overview";document.querySelectorAll(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView));
-  $("content").innerHTML=(views[currentView]||overview)();
+ async function init(){
+  try{
+    const supabaseUrl="https://cgnlmbsdtqbkajtkqssm.supabase.co";
+
+    // Paste your Supabase PUBLISHABLE key between the quotes below.
+    const supabaseKey="sb_publishable_k51uAkJt_K5K0SdMM5twdg_eada8Jtg";
+
+    if(!supabaseUrl || !supabaseKey || supabaseKey==="sb_publishable_k51uAkJt_K5K0SdMM5twdg_eada8Jtg"){
+      throw new Error("Supabase configuration is missing.");
+    }
+
+    sb=window.supabase.createClient(supabaseUrl,supabaseKey);
+
+    const {data:{session},error}=await sb.auth.getSession();
+    if(error)throw error;
+
+    if(session)await enter(session);
+    else showAuth();
+
+    sb.auth.onAuthStateChange(async(_,s)=>{
+      if(s)await enter(s);
+      else showAuth();
+    });
+
+  }catch(e){
+    console.error("FinMemory initialization error:",e);
+    $("authMessage").textContent=e.message||"Unable to connect to FinMemory.";
+  }
 }
 const views={};
 views.overview=()=>{let t=monthTx(),i=inc(t),e=exp(t),c=catTotals(t),top=Object.entries(c).sort((a,b)=>b[1]-a[1])[0],recent=state.transactions.slice(0,6);return `<div class="hero"><p class="eyebrow">YOUR MONEY STORY</p><h3>See where your money went — and remember why.</h3><p>FinMemory turns individual transactions into a searchable personal money history.</p><div class="hero-actions"><button class="primary" id="heroAdd">+ Record money</button><button class="ghost" id="heroDiary">Open diary</button></div></div><div class="grid stats">${stat("This month's income",money(i),"positive")}${stat("This month's spending",money(e),"negative")}${stat("Net this month",money(i-e),i>=e?"positive":"negative")}${stat("Largest category",top?esc(top[0]):"—")}</div><div class="grid section-grid" style="margin-top:16px"><div class="card"><div class="card-head"><h3>Recent memories</h3><button class="ghost" id="openDiary">View all</button></div><div class="list">${recent.length?recent.map(txRow).join(""):`<div class="empty">Your first money memory is waiting.</div>`}</div></div><div class="card"><div class="card-head"><h3>Spending pulse</h3></div>${bars(c)}</div></div>`};
