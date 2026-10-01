@@ -62,6 +62,33 @@ async function load(){
     console.error("FinMemory initialization error:",e);
     $("authMessage").textContent=e.message||"Unable to connect to FinMemory.";
   }
+} 
+function render(){
+  document.querySelectorAll(".nav-item").forEach(b=>{
+    b.classList.toggle("active",b.dataset.view===currentView);
+  });
+
+  const labels={
+    overview:"Overview",
+    diary:"Money Diary",
+    calendar:"Money Calendar",
+    replay:"Money Replay",
+    patterns:"Patterns",
+    detective:"Money Detective",
+    forecast:"Forecast",
+    budgets:"Budgets",
+    goals:"Goals",
+    recurring:"Recurring",
+    assistant:"Money Assistant",
+    settings:"Settings"
+  };
+
+  $("pageTitle").textContent=labels[currentView]||"Overview";
+  $("content").innerHTML=views[currentView]?views[currentView]():views.overview();
+
+  if(currentView==="diary"){
+    diaryResults();
+  }
 }
 const views={};
 views.overview=()=>{let t=monthTx(),i=inc(t),e=exp(t),c=catTotals(t),top=Object.entries(c).sort((a,b)=>b[1]-a[1])[0],recent=state.transactions.slice(0,6);return `<div class="hero"><p class="eyebrow">YOUR MONEY STORY</p><h3>See where your money went — and remember why.</h3><p>FinMemory turns individual transactions into a searchable personal money history.</p><div class="hero-actions"><button class="primary" id="heroAdd">+ Record money</button><button class="ghost" id="heroDiary">Open diary</button></div></div><div class="grid stats">${stat("This month's income",money(i),"positive")}${stat("This month's spending",money(e),"negative")}${stat("Net this month",money(i-e),i>=e?"positive":"negative")}${stat("Largest category",top?esc(top[0]):"—")}</div><div class="grid section-grid" style="margin-top:16px"><div class="card"><div class="card-head"><h3>Recent memories</h3><button class="ghost" id="openDiary">View all</button></div><div class="list">${recent.length?recent.map(txRow).join(""):`<div class="empty">Your first money memory is waiting.</div>`}</div></div><div class="card"><div class="card-head"><h3>Spending pulse</h3></div>${bars(c)}</div></div>`};
