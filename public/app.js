@@ -1,6 +1,5 @@
 let sb=null,authMode="login",currentType="expense",currentView="overview";
 let state={profile:null,transactions:[],categories:[],budgets:[],goals:[]};
-const builtIn=[
   const builtIn=[
   ["Food & Feeding","food"],
   ["Transport","transport"],
@@ -1340,14 +1339,8 @@ function openTx(){
     );
   });
 
-  $("txCategory").innerHTML=cats()
-    .map(c=>`
-      <option value="${esc(c.name)}">
-        ${c.icon} ${esc(c.name)}
-      </option>
-    `)
-    .join("");
-
+     renderCategoryPicker();
+  
   $("transactionModal").classList.remove("hidden");
 }
 
@@ -1712,6 +1705,23 @@ document.addEventListener("click",async e=>{
 
     return;
   }
+  if(e.target.closest(".category-choice")){
+
+    const button=e.target.closest(".category-choice");
+    const category=button.dataset.category;
+
+    $("txCategory").value=category;
+
+    document.querySelectorAll(".category-choice").forEach(x=>{
+      x.classList.toggle(
+        "selected",
+        x.dataset.category===category
+      );
+    });
+
+    return;
+  }
+
 
 
   if(
