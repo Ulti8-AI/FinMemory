@@ -2093,6 +2093,21 @@ if(e.target.closest("[data-delete-tx]")){
 
   return;
 }
+  if(e.target.closest("[data-view]")){
+
+  const button=e.target.closest("[data-view]");
+  const view=button.dataset.view;
+
+  if(view){
+
+    currentView=view;
+
+    render();
+
+  }
+
+  return;
+}
    if(e.target.id==="addBudget"){
 
   const modal=document.createElement("div");
