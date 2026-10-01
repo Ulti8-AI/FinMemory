@@ -1,6 +1,145 @@
 let sb=null,authMode="login",currentType="expense",currentView="overview";
 let state={profile:null,transactions:[],categories:[],budgets:[],goals:[]};
-const builtIn=[["Food & Feeding","🍽️"],["Transport","🚗"],["Data & Airtime","📱"],["Bills","🧾"],["School","🎓"],["Shopping","🛍️"],["Entertainment","🎮"],["Health","❤️"],["Family","👨‍👩‍👧"],["Savings","🏦"],["Other","•"]];
+const builtIn=[
+  const builtIn=[
+  ["Food & Feeding","food"],
+  ["Transport","transport"],
+  ["Data & Airtime","data"],
+  ["Bills","bills"],
+  ["School","school"],
+  ["Shopping","shopping"],
+  ["Entertainment","entertainment"],
+  ["Health","health"],
+  ["Savings","savings"],
+  ["Family","family"],
+  ["Gifts","gifts"],
+  ["Home","home"],
+  ["Clothing","clothing"],
+  ["Technology","technology"],
+  ["Fitness","fitness"],
+  ["Travel","travel"],
+  ["Giving","giving"],
+  ["Other","other"]
+];
+function categoryIcon(type){
+  const icons={
+    food:`
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M14 9v13M10 9v8c0 3 2 5 4 5s4-2 4-5V9M14 22v17"/>
+        <path d="M29 9v30M29 9c6 1 9 5 9 11v4h-9"/>
+      </svg>`,
+
+    transport:`
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M11 29l3-13c.5-2 2-3 4-3h12c2 0 3.5 1 4 3l3 13v7H11z"/>
+        <path d="M15 25h18M15 34h.1M33 34h.1"/>
+        <path d="M17 13l2-4h10l2 4"/>
+      </svg>`,
+
+    data:`
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M24 34v-1"/>
+        <path d="M17 28a10 10 0 0 1 14 0"/>
+        <path d="M12 23a17 17 0 0 1 24 0"/>
+        <path d="M7 18a24 24 0 0 1 34 0"/>
+      </svg>`,
+
+    bills:`
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M14 8h20v32l-4-3-4 3-4-3-4 3-4-3z"/>
+        <path d="M19 16h10M19 22h10M19 28h6"/>
+      </svg>`,
+
+    school:`
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M7 19l17-9 17 9-17 9z"/>
+        <path d="M13 23v9c6 5 16 5 22 0v-9"/>
+        <path d="M41 20v12"/>
+      </svg>`,
+
+    shopping:`
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M10 17h28l-2 23H12z"/>
+        <path d="M17 19v-5a7 7 0 0 1 14 0v5"/>
+      </svg>`,
+
+    entertainment:`
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M13 15h22a6 6 0 0 1 6 6v9a6 6 0 0 1-6 6H13a6 6 0 0 1-6-6v-9a6 6 0 0 1 6-6z"/>
+        <path d="M14 25h8M18 21v8M30 23h.1M35 27h.1"/>
+      </svg>`,
+
+    health:`
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M24 39S8 29 8 18a9 9 0 0 1 16-6 9 9 0 0 1 16 6c0 11-16 21-16 21z"/>
+        <path d="M24 17v12M18 23h12"/>
+      </svg>`,
+
+    savings:`
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M10 20c0-5 5-9 14-9s14 4 14 9v13c0 4-5 6-14 6s-14-2-14-6z"/>
+        <path d="M15 20c3 3 15 3 18 0"/>
+        <path d="M39 24h3v7h-3"/>
+        <path d="M24 19v13M20 25h8"/>
+      </svg>`,
+
+    family:`
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <circle cx="24" cy="14" r="5"/>
+        <circle cx="12" cy="19" r="4"/>
+        <circle cx="36" cy="19" r="4"/>
+        <path d="M15 36c0-7 4-11 9-11s9 4 9 11"/>
+        <path d="M5 36c0-5 3-8 7-8 3 0 5 2 6 5M43 36c0-5-3-8-7-8-3 0-5 2-6 5"/>
+      </svg>`,
+
+    gifts:`
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M8 20h32v22H8zM6 14h36v7H6zM24 14v28"/>
+        <path d="M24 14c-7 0-10-3-8-7 2-4 8 1 8 7zM24 14c7 0 10-3 8-7-2-4-8 1-8 7z"/>
+      </svg>`,
+
+    home:`
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M7 23L24 9l17 14v17H29V29H19v11H7z"/>
+      </svg>`,
+
+    clothing:`
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M18 10l6 4 6-4 10 7-5 8-5-3v17H18V22l-5 3-5-8z"/>
+      </svg>`,
+
+    technology:`
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="7" y="10" width="34" height="24" rx="3"/>
+        <path d="M4 39h40M17 39l2-5h10l2 5"/>
+      </svg>`,
+
+    fitness:`
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M12 19v10M8 21v6M36 19v10M40 21v6"/>
+        <path d="M12 24h24M17 17v14M31 17v14"/>
+      </svg>`,
+
+    travel:`
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M24 7l5 15 12 7-2 4-14-4-14 4-2-4 12-7z"/>
+        <path d="M20 29l-3 12M28 29l3 12"/>
+      </svg>`,
+
+    giving:`
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M24 39S8 29 8 18a9 9 0 0 1 16-6 9 9 0 0 1 16 6c0 11-16 21-16 21z"/>
+        <path d="M16 23h16M24 18v10"/>
+      </svg>`,
+
+    other:`
+      <svg viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M24 6l3 14 14 4-14 4-3 14-3-14-14-4 14-4z"/>
+      </svg>`
+  };
+
+  return icons[type]||icons.other;
+}
 const $=id=>document.getElementById(id);
 const money=n=>new Intl.NumberFormat(undefined,{style:"currency",currency:state.profile?.currency||"NGN",maximumFractionDigits:2}).format(Number(n)||0);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
@@ -10,7 +149,16 @@ const sum=a=>a.reduce((x,y)=>x+Number(y.amount||0),0);
 const exp=a=>sum(a.filter(t=>t.type==="expense"));
 const inc=a=>sum(a.filter(t=>t.type==="income"));
 const monthTx=()=>state.transactions.filter(t=>t.transaction_date.slice(0,7)===today().slice(0,7));
-const cats=()=>[...builtIn.map(x=>({name:x[0],icon:x[1]})),...state.categories.map(x=>({name:x.name,icon:x.icon||"✦"}))].filter((x,i,a)=>a.findIndex(y=>y.name.toLowerCase()===x.name.toLowerCase())===i);
+ const cats=()=>[
+  ...builtIn.map(x=>({name:x[0],icon:x[1],builtIn:true})),
+  ...state.categories.map(x=>({
+    name:x.name,
+    icon:x.icon||"other",
+    builtIn:false
+  }))
+].filter((x,i,a)=>
+  a.findIndex(y=>y.name.toLowerCase()===x.name.toLowerCase())===i
+);
 const catTotals=a=>{let o={};a.filter(t=>t.type==="expense").forEach(t=>o[t.category]=(o[t.category]||0)+Number(t.amount));return o};
 function toast(m){$("toast").textContent=m;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2500)}
 async function init(){
