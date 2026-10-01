@@ -824,3 +824,13 @@
   border-radius:999px;
   background:#6874f5;
 }
+.goal-actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:10px;
+}
+
+.goal-add-money{
+  font-size:12px;
+  padding:8px 12px;
+}
