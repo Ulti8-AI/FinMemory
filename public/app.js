@@ -565,7 +565,16 @@ const views={};
 
                         <div class="progress">
                           <i style="width:${p}%"></i>
-                        </div>
+                        </div> 
+                        <div class="goal-actions">
+
+                         <button
+                           type="button"
+                           class="ghost goal-add-money"
+                           data-goal-id="${esc(g.id)}"
+                        >
+                           + Add money
+                         </button>
 
                       </div>
                     `;
@@ -2089,6 +2098,52 @@ if(e.target.closest("[data-delete-tx]")){
     toast("Money memory deleted.");
 
     await refresh();
+  }
+
+  return;
+}
+  if(e.target.closest(".goal-add-money")){
+
+  const button=e.target.closest(".goal-add-money");
+
+  const goalId=button.dataset.goalId;
+
+  const goal=state.goals.find(
+    g=>String(g.id)===String(goalId)
+  );
+
+  if(!goal){
+    return toast("Goal not found.");
+  }
+
+  const amount=Number(
+    prompt(`How much do you want to add to "${goal.name}"?`)
+  );
+
+  if(!amount||amount<=0){
+    return;
+  }
+
+  const newSaved=
+    Number(goal.saved_amount||0)+amount;
+
+  const {error}=await sb
+    .from("goals")
+    .update({
+      saved_amount:newSaved
+    })
+    .eq("id",goalId);
+
+  if(error){
+
+    toast(error.message);
+
+  }else{
+
+    toast("Money added to your goal.");
+
+    await refresh();
+
   }
 
   return;
