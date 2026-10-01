@@ -71,7 +71,16 @@
       <label>Date<input id="txDate" type="date" required></label>
     </div>
     <label>What was it?<input id="txTitle" required placeholder="e.g. Lunch with friends"></label>
-    <label>Category<select id="txCategory"></select></label>
+     <div class="category-picker-field">
+  <div class="category-picker-label">
+    <span>Category</span>
+    <small>Choose what this memory was about</small>
+  </div>
+
+  <div id="categoryPicker" class="category-picker"></div>
+
+  <select id="txCategory" class="hidden" aria-hidden="true"></select>
+</div>
     <label>Note <span class="muted">(optional)</span><textarea id="txNote" rows="3" placeholder="Add the context you want your future self to remember…"></textarea></label>
     <label>Tags <span class="muted">(optional)</span><input id="txTags" placeholder="school, weekend, important"></label>
     <div class="modal-actions"><button type="button" class="ghost" data-close="transactionModal">Cancel</button><button class="primary" type="submit">Save memory</button></div>
