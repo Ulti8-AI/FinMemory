@@ -677,3 +677,94 @@
   width:100%;
   margin-top:4px;
 }
+/* =========================================================
+   FINMEMORY — BUDGET MODAL
+   ========================================================= */
+
+.fm-budget-modal{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:grid;
+  place-items:center;
+  padding:20px;
+  background:#17203366;
+  backdrop-filter:blur(5px);
+}
+
+.fm-budget-box{
+  width:min(440px,100%);
+  background:#fff;
+  border:1px solid #e7eaf0;
+  border-radius:24px;
+  padding:24px;
+  box-shadow:0 24px 70px #17203325;
+}
+
+.fm-budget-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:22px;
+}
+
+.fm-budget-head h3{
+  margin:0;
+  font-size:20px;
+  color:#202638;
+}
+
+.fm-budget-head p{
+  margin:6px 0 0;
+  color:#8a92a3;
+  font-size:13px;
+}
+
+.fm-budget-close{
+  width:34px;
+  height:34px;
+  border:0;
+  border-radius:10px;
+  background:#f3f4f7;
+  color:#697184;
+  font-size:22px;
+  cursor:pointer;
+}
+
+#budgetForm{
+  display:grid;
+  gap:16px;
+}
+
+#budgetForm label{
+  display:grid;
+  gap:7px;
+  font-size:13px;
+  font-weight:750;
+  color:#3b4457;
+}
+
+#budgetForm input,
+#budgetForm select{
+  width:100%;
+  box-sizing:border-box;
+  border:1px solid #e1e5ec;
+  border-radius:13px;
+  padding:13px 14px;
+  font:inherit;
+  outline:none;
+  background:#fafbfc;
+}
+
+#budgetForm input:focus,
+#budgetForm select:focus{
+  border-color:#7b84ff;
+  background:#fff;
+  box-shadow:0 0 0 3px #7b84ff14;
+}
+
+.fm-budget-save{
+  width:100%;
+  margin-top:4px;
+}
