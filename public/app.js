@@ -63,11 +63,7 @@ async function load(){
     $("authMessage").textContent=e.message||"Unable to connect to FinMemory.";
   }
 } 
-function render(){
-  document.querySelectorAll(".nav-item").forEach(b=>{
-    b.classList.toggle("active",b.dataset.view===currentView);
-  });
-
+ function render(){
   const labels={
     overview:"Overview",
     diary:"Money Diary",
@@ -79,39 +75,1680 @@ function render(){
     budgets:"Budgets",
     goals:"Goals",
     recurring:"Recurring",
+    calculator:"Money Calculator",
     assistant:"Money Assistant",
     settings:"Settings"
   };
 
-  $("pageTitle").textContent=labels[currentView]||"Overview";
-  $("content").innerHTML=views[currentView]?views[currentView]():views.overview();
+  /* Add Calculator to navigation if it isn't already there */
+  const nav=$("nav");
+  if(nav && !nav.querySelector('[data-view="calculator"]')){
+    const assistant=nav.querySelector('[data-view="assistant"]');
+    const button=document.createElement("button");
+    button.className="nav-item";
+    button.dataset.view="calculator";
+    button.innerHTML="＋ <span>Money Calculator</span>";
+    if(assistant) nav.insertBefore(button,assistant);
+    else nav.appendChild(button);
+  }
 
-  if(currentView==="diary"){
-    diaryResults();
+  document.querySelectorAll(".nav-item").forEach(b=>{
+    b.classList.toggle("active",b.dataset.view===currentView);
+  });
+
+  $("pageTitle").textContent=labels[currentView]||"Overview";
+
+  try{
+    const view=views[currentView]||views.overview;
+    $("content").innerHTML=view();
+
+    if(currentView==="diary"){
+      diaryResults();
+    }
+  }catch(error){
+    console.error("FinMemory section error:",error);
+
+    $("content").innerHTML=`
+      <div class="card">
+        <h3>This section needs another moment</h3>
+        <p class="muted">
+          FinMemory couldn't display this section right now.
+          Your saved financial records are still protected.
+        </p>
+        <button class="primary" id="retryRender">Try again</button>
+      </div>
+    `;
   }
 }
-const views={};
-views.overview=()=>{let t=monthTx(),i=inc(t),e=exp(t),c=catTotals(t),top=Object.entries(c).sort((a,b)=>b[1]-a[1])[0],recent=state.transactions.slice(0,6);return `<div class="hero"><p class="eyebrow">YOUR MONEY STORY</p><h3>See where your money went — and remember why.</h3><p>FinMemory turns individual transactions into a searchable personal money history.</p><div class="hero-actions"><button class="primary" id="heroAdd">+ Record money</button><button class="ghost" id="heroDiary">Open diary</button></div></div><div class="grid stats">${stat("This month's income",money(i),"positive")}${stat("This month's spending",money(e),"negative")}${stat("Net this month",money(i-e),i>=e?"positive":"negative")}${stat("Largest category",top?esc(top[0]):"—")}</div><div class="grid section-grid" style="margin-top:16px"><div class="card"><div class="card-head"><h3>Recent memories</h3><button class="ghost" id="openDiary">View all</button></div><div class="list">${recent.length?recent.map(txRow).join(""):`<div class="empty">Your first money memory is waiting.</div>`}</div></div><div class="card"><div class="card-head"><h3>Spending pulse</h3></div>${bars(c)}</div></div>`};
-views.diary=()=>`<div class="card"><div class="toolbar"><input class="search" id="diarySearch" placeholder="Search memories, notes, tags, dates…"><select class="search" id="diaryType"><option value="">All types</option><option value="expense">Expenses</option><option value="income">Income</option></select><select class="search" id="diaryCat"><option value="">All categories</option>${cats().map(c=>`<option>${esc(c.name)}</option>`).join("")}</select><button class="primary" id="diaryAdd">+ Record</button></div><div class="notice">Money Memory searches titles, categories, notes, tags, dates and amounts.</div><div id="diaryResults" class="list" style="margin-top:10px"></div></div>`;
-views.calendar=()=>{let n=new Date(),y=n.getFullYear(),m=n.getMonth(),f=new Date(y,m,1),l=new Date(y,m+1,0),h=`<div class="card"><div class="card-head"><h3>${f.toLocaleDateString(undefined,{month:"long",year:"numeric"})}</h3><button class="primary" id="calAdd">+ Record</button></div><div class="calendar">${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(x=>`<div class="cal-head">${x}</div>`).join("")}`;for(let i=0;i<f.getDay();i++)h+=`<div class="day muted-day"></div>`;for(let d=1;d<=l.getDate();d++){let k=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`,v=exp(state.transactions.filter(t=>t.transaction_date===k));h+=`<div class="day"><strong>${d}</strong>${v?`<span class="dot">−${money(v)}</span>`:""}</div>`}return h+`</div></div>`};
-views.replay=()=>{let a=monthTx().sort((x,y)=>x.transaction_date.localeCompare(y.transaction_date));return `<div class="card"><div class="card-head"><div><h3>Money Replay</h3><span class="muted">This month as a chronological story</span></div></div><div class="timeline">${a.length?a.map(t=>`<div class="timeline-item"><div class="row-title">${esc(t.title)}</div><div class="row-sub">${dateText(t.transaction_date)} · ${esc(t.category)}${t.note?" · "+esc(t.note):""}</div><div class="amount ${t.type==="income"?"positive":"negative"}">${t.type==="income"?"+":"−"}${money(t.amount)}</div></div>`).join(""):`<div class="empty">Nothing recorded this month yet.</div>`}</div></div>`};
-views.patterns=()=>{let t=monthTx(),c=catTotals(t),i=inc(t),e=exp(t),days={};t.filter(x=>x.type==="expense").forEach(x=>{let d=new Date(x.transaction_date+"T00:00:00").toLocaleDateString(undefined,{weekday:"long"});days[d]=(days[d]||0)+Number(x.amount)});let top=Object.entries(days).sort((a,b)=>b[1]-a[1])[0];return `<div class="grid stats">${stat("Savings rate",i?Math.max(0,(i-e)/i*100).toFixed(1)+"%":"—","positive")}${stat("Transactions",t.length)}${stat("Categories used",Object.keys(c).length)}${stat("Top day",top?top[0]:"—")}</div><div class="grid two" style="margin-top:16px"><div class="card"><h3>Category pattern</h3>${bars(c)}</div><div class="card"><h3>Day-of-week pattern</h3>${top?`<p class="kpi">${esc(top[0])}</p><p class="muted">${money(top[1])} spent on your highest-spend weekday this month.</p>`:`<div class="empty">Not enough data yet.</div>`}</div></div>`};
-views.detective=()=>{let t=monthTx(),e=t.filter(x=>x.type==="expense"),c=catTotals(t),top=Object.entries(c).sort((a,b)=>b[1]-a[1])[0],big=e.slice().sort((a,b)=>b.amount-a.amount)[0],missing=t.filter(x=>!x.note).length;return `<div class="grid two"><div class="finding"><b>Largest category</b><span class="muted">${top?`${esc(top[0])} · ${money(top[1])}`:"No spending yet."}</span></div><div class="finding"><b>Biggest expense</b><span class="muted">${big?`${esc(big.title)} · ${money(big.amount)}`:"No expenses yet."}</span></div><div class="finding"><b>Memory quality</b><span class="muted">${missing?`${missing} record(s) have no note.`:"Your recent records have useful context."}</span></div><div class="finding"><b>Pattern watch</b><span class="muted">${e.length>=5?"You have enough recent spending data for stronger analysis.":"Keep recording more transactions for stronger evidence."}</span></div></div>`};
-views.forecast=()=>{let i=inc(monthTx()),e=exp(monthTx()),daily=e/Math.max(1,new Date().getDate()),p=i-daily*30;return `<div class="hero"><p class="eyebrow">30-DAY MONEY WEATHER</p><h3>${money(p)}</h3><p>A simple planning estimate based on this month's recorded income and average daily spending.</p></div><div class="grid two"><div class="card"><h3>Average daily spending</h3><p class="kpi">${money(daily)}</p></div><div class="card"><h3>Current-month net</h3><p class="kpi">${money(i-e)}</p></div></div>`};
-views.budgets=()=>`<div class="card"><div class="card-head"><h3>Your budgets</h3><button class="primary" id="addBudget">+ Add budget</button></div>${state.budgets.length?state.budgets.map(b=>{let s=exp(monthTx().filter(t=>t.category===b.category)),p=Math.min(100,s/Number(b.amount||1)*100);return `<div class="goal"><div class="row"><div><b>${esc(b.category)}</b><div class="row-sub">${money(s)} of ${money(b.amount)}</div></div><b>${p.toFixed(0)}%</b></div><div class="progress"><i style="width:${p}%"></i></div></div>`}).join(""):`<div class="empty">No budgets yet.</div>`}</div>`;
-views.goals=()=>`<div class="card"><div class="card-head"><h3>Savings goals</h3><button class="primary" id="addGoal">+ Add goal</button></div>${state.goals.length?state.goals.map(g=>{let p=Math.min(100,Number(g.saved_amount)/Number(g.target_amount||1)*100);return `<div class="goal"><div class="row"><div><b>${esc(g.name)}</b><div class="row-sub">${money(g.saved_amount)} saved of ${money(g.target_amount)}</div></div><b>${p.toFixed(0)}%</b></div><div class="progress"><i style="width:${p}%"></i></div></div>`}).join(""):`<div class="empty">No goals yet.</div>`}</div>`;
-views.recurring=()=>`<div class="card"><h3>Recurring money</h3><p class="muted">The database foundation is ready for recurring transactions. Automation will be added in the next feature pass.</p></div>`;
-views.assistant=()=>`<div class="grid two"><div class="card"><h3>Money Assistant</h3><p class="muted">Ask simple questions about your current records.</p><div class="toolbar"><input class="search" id="ask" placeholder="How much did I spend this month?"><button class="primary" id="askBtn">Ask</button></div><div id="answer" class="assistant-answer">Try asking about spending, income, your biggest category, balance, or savings.</div></div><div class="card"><h3>AI upgrade</h3><p class="muted">The real AI assistant will be connected through the Node.js backend after the core system is verified.</p></div></div>`;
-views.settings=()=>`<div class="grid two"><div class="card"><h3>Profile</h3><label>Name<input id="profileName" value="${esc(state.profile?.display_name||"")}"></label><label>Currency<select id="profileCurrency">${["NGN","USD","GBP","EUR","GHS","KES","ZAR"].map(c=>`<option ${state.profile?.currency===c?"selected":""}>${c}</option>`).join("")}</select></label><button class="primary" id="saveProfile">Save settings</button></div><div class="card"><h3>Data</h3><p class="muted">Your records are stored in Supabase and protected by Row Level Security.</p><button class="ghost" id="exportData">Export my data</button></div></div>`;
 
-function openTx(){$("txDate").value=today();$("txAmount").value="";$("txTitle").value="";$("txNote").value="";$("txTags").value="";currentType="expense";document.querySelectorAll(".type-btn").forEach(b=>b.classList.toggle("active",b.dataset.type===currentType));$("txCategory").innerHTML=cats().map(c=>`<option value="${esc(c.name)}">${c.icon} ${esc(c.name)}</option>`).join("");$("transactionModal").classList.remove("hidden")}
-async function saveTx(){let u=(await sb.auth.getUser()).data.user,row={user_id:u.id,type:currentType,amount:Number($("txAmount").value),title:$("txTitle").value.trim(),category:$("txCategory").value,transaction_date:$("txDate").value,note:$("txNote").value.trim()||null,tags:$("txTags").value.split(",").map(x=>x.trim()).filter(Boolean)};if(!row.amount||!row.title)return toast("Add an amount and title.");let {error}=await sb.from("transactions").insert(row);if(error)return toast(error.message);$("transactionModal").classList.add("hidden");toast("Money memory saved.");await refresh()}
-function diaryResults(){let q=($("diarySearch")?.value||"").toLowerCase(),ty=$("diaryType")?.value||"",ca=$("diaryCat")?.value||"",a=state.transactions.filter(t=>(!ty||t.type===ty)&&(!ca||t.category===ca));if(q)a=a.filter(t=>[t.title,t.category,t.note,t.tags?.join(" "),t.transaction_date,t.amount].join(" ").toLowerCase().includes(q));$("diaryResults").innerHTML=a.length?a.map(txRow).join(""):`<div class="empty">No memories match.</div>`}
-async function saveProfile(){let u=(await sb.auth.getUser()).data.user,{error}=await sb.from("profiles").upsert({id:u.id,display_name:$("profileName").value.trim(),currency:$("profileCurrency").value});if(error)return toast(error.message);toast("Profile saved.");await refresh()}
-function ask(){let q=$("ask").value.toLowerCase(),t=monthTx(),i=inc(t),e=exp(t),c=catTotals(t),top=Object.entries(c).sort((a,b)=>b[1]-a[1])[0],a=q.includes("spend")?`You recorded ${money(e)} of spending this month.`:q.includes("earn")||q.includes("income")?`You recorded ${money(i)} of income this month.`:q.includes("biggest")||q.includes("largest")?(top?`${top[0]} is your largest spending category at ${money(top[1])}.`:"No spending categories yet."):q.includes("balance")||q.includes("net")?`Your recorded net this month is ${money(i-e)}.`:`I can answer simple questions about your current FinMemory records.`;$("answer").textContent=a}
-document.addEventListener("click",async e=>{let n=e.target.closest(".nav-item");if(n){currentView=n.dataset.view;render();return}if(["quickAdd","mobileAdd","heroAdd","diaryAdd","calAdd"].includes(e.target.id)){openTx();return}if(["heroDiary","openDiary"].includes(e.target.id)){currentView="diary";render();return}if(e.target.closest("[data-close]")){$(e.target.closest("[data-close]").dataset.close).classList.add("hidden");return}if(e.target.classList.contains("type-btn")){currentType=e.target.dataset.type;document.querySelectorAll(".type-btn").forEach(b=>b.classList.toggle("active",b.dataset.type===currentType));return}if(e.target.id==="askBtn"){ask();return}if(e.target.id==="logout"){await sb.auth.signOut();return}if(e.target.id==="saveProfile"){await saveProfile();return}if(e.target.id==="exportData"){let u=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:"application/json"})),a=document.createElement("a");a.href=u;a.download="finmemory-backup.json";a.click();URL.revokeObjectURL(u);return}if(e.target.id==="addBudget"){let c=prompt("Category name?"),a=Number(prompt("Monthly budget amount?"));if(c&&a>0){let u=(await sb.auth.getUser()).data.user,{error}=await sb.from("budgets").insert({user_id:u.id,category:c,amount:a});if(error)toast(error.message);else{toast("Budget added.");await refresh()}}return}if(e.target.id==="addGoal"){let n=prompt("Goal name?"),a=Number(prompt("Target amount?"));if(n&&a>0){let u=(await sb.auth.getUser()).data.user,{error}=await sb.from("goals").insert({user_id:u.id,name:n,target_amount:a});if(error)toast(error.message);else{toast("Goal added.");await refresh()}}return}});
-document.addEventListener("input",e=>{if(["diarySearch","diaryType","diaryCat"].includes(e.target.id))diaryResults()});
-$("transactionForm").addEventListener("submit",e=>{e.preventDefault();saveTx()});
-document.querySelectorAll(".auth-tab").forEach(b=>b.addEventListener("click",()=>{authMode=b.dataset.auth;document.querySelectorAll(".auth-tab").forEach(x=>x.classList.toggle("active",x===b));$("nameWrap").classList.toggle("hidden",authMode!=="signup");$("authSubmit").textContent=authMode==="signup"?"Create account":"Log in";$("authMessage").textContent=""}));
-$("authForm").addEventListener("submit",async e=>{e.preventDefault();$("authMessage").textContent="Working…";let email=$("authEmail").value.trim(),password=$("authPassword").value;if(authMode==="signup"){let {data,error}=await sb.auth.signUp({email,password,options:{data:{display_name:$("authName").value.trim()}}});if(error)$("authMessage").textContent=error.message;else $("authMessage").textContent=data.session?"Account created.":"Account created. Check your email if confirmation is enabled."}else{let {error}=await sb.auth.signInWithPassword({email,password});if(error)$("authMessage").textContent=error.message}});
+
+/* ---------- DISPLAY HELPERS ---------- */
+
+function stat(label,value,tone=""){
+  return `
+    <div class="stat">
+      <span class="muted">${esc(label)}</span>
+      <strong class="${tone}">${esc(value)}</strong>
+    </div>
+  `;
+}
+
+function bars(data){
+  const entries=Object.entries(data||{});
+
+  if(!entries.length){
+    return `<div class="empty">No spending recorded yet.</div>`;
+  }
+
+  const max=Math.max(...entries.map(([,v])=>Number(v)||0),1);
+
+  return `
+    <div class="bars">
+      ${entries
+        .sort((a,b)=>Number(b[1])-Number(a[1]))
+        .map(([name,value])=>`
+          <div class="bar-row">
+            <div class="row">
+              <span>${esc(name)}</span>
+              <b>${money(value)}</b>
+            </div>
+            <div class="progress">
+              <i style="width:${Math.max(3,(Number(value)/max)*100)}%"></i>
+            </div>
+          </div>
+        `).join("")}
+    </div>
+  `;
+}
+
+function txRow(t){
+  return `
+    <div class="list-row">
+      <div>
+        <div class="row-title">${esc(t.title)}</div>
+        <div class="row-sub">
+          ${dateText(t.transaction_date)}
+          · ${esc(t.category)}
+          ${t.note?" · "+esc(t.note):""}
+        </div>
+      </div>
+
+      <div class="amount ${t.type==="income"?"positive":"negative"}">
+        ${t.type==="income"?"+":"−"}${money(t.amount)}
+      </div>
+    </div>
+  `;
+}
+
+async function refresh(){
+  try{
+    await load();
+    render();
+  }catch(error){
+    console.error("FinMemory refresh error:",error);
+    toast("Couldn't refresh your financial data.");
+  }
+}
+
+
+/* ---------- VIEWS ---------- */
+
+const views={};
+
+views.overview=()=>{
+  const t=monthTx();
+  const i=inc(t);
+  const e=exp(t);
+  const c=catTotals(t);
+  const top=Object.entries(c).sort((a,b)=>b[1]-a[1])[0];
+  const recent=state.transactions.slice(0,6);
+
+  return `
+    <div class="hero">
+      <p class="eyebrow">YOUR MONEY STORY</p>
+
+      <h3>
+        See where your money went — and remember why.
+      </h3>
+
+      <p>
+        FinMemory turns individual transactions into a searchable
+        personal money history.
+      </p>
+
+      <div class="hero-actions">
+        <button class="primary" id="heroAdd">+ Record money</button>
+        <button class="ghost" id="heroDiary">Open diary</button>
+      </div>
+    </div>
+
+    <div class="grid stats">
+      ${stat("This month's income",money(i),"positive")}
+      ${stat("This month's spending",money(e),"negative")}
+      ${stat("Net this month",money(i-e),i>=e?"positive":"negative")}
+      ${stat("Largest category",top?esc(top[0]):"—")}
+    </div>
+
+    <div class="grid section-grid" style="margin-top:16px">
+
+      <div class="card">
+        <div class="card-head">
+          <h3>Recent memories</h3>
+          <button class="ghost" id="openDiary">View all</button>
+        </div>
+
+        <div class="list">
+          ${
+            recent.length
+              ? recent.map(txRow).join("")
+              : `<div class="empty">Your first money memory is waiting.</div>`
+          }
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3>Spending pulse</h3>
+        </div>
+
+        ${bars(c)}
+      </div>
+
+    </div>
+  `;
+};
+
+
+views.diary=()=>`
+  <div class="card">
+
+    <div class="toolbar">
+
+      <input
+        class="search"
+        id="diarySearch"
+        placeholder="Search memories, notes, tags, dates…"
+      >
+
+      <select class="search" id="diaryType">
+        <option value="">All types</option>
+        <option value="expense">Expenses</option>
+        <option value="income">Income</option>
+      </select>
+
+      <select class="search" id="diaryCat">
+        <option value="">All categories</option>
+        ${cats().map(c=>`
+          <option value="${esc(c.name)}">
+            ${esc(c.name)}
+          </option>
+        `).join("")}
+      </select>
+
+      <button class="primary" id="diaryAdd">+ Record</button>
+
+    </div>
+
+    <div class="notice">
+      Money Memory searches titles, categories, notes, tags, dates and amounts.
+    </div>
+
+    <div id="diaryResults" class="list" style="margin-top:10px"></div>
+
+  </div>
+`;
+
+
+views.calendar=()=>{
+  const n=new Date();
+  const y=n.getFullYear();
+  const m=n.getMonth();
+
+  const first=new Date(y,m,1);
+  const last=new Date(y,m+1,0);
+
+  let h=`
+    <div class="card">
+
+      <div class="card-head">
+        <h3>
+          ${first.toLocaleDateString(undefined,{
+            month:"long",
+            year:"numeric"
+          })}
+        </h3>
+
+        <button class="primary" id="calAdd">+ Record</button>
+      </div>
+
+      <div class="calendar">
+
+        ${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
+          .map(x=>`<div class="cal-head">${x}</div>`)
+          .join("")}
+  `;
+
+  for(let i=0;i<first.getDay();i++){
+    h+=`<div class="day muted-day"></div>`;
+  }
+
+  for(let d=1;d<=last.getDate();d++){
+
+    const k=
+      `${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+
+    const value=exp(
+      state.transactions.filter(
+        t=>t.transaction_date===k
+      )
+    );
+
+    h+=`
+      <div class="day">
+        <strong>${d}</strong>
+        ${
+          value
+            ? `<span class="dot">−${money(value)}</span>`
+            : ""
+        }
+      </div>
+    `;
+  }
+
+  return h+`
+      </div>
+    </div>
+  `;
+};
+
+
+views.replay=()=>{
+  const a=monthTx().sort(
+    (x,y)=>x.transaction_date.localeCompare(y.transaction_date)
+  );
+
+  return `
+    <div class="card">
+
+      <div class="card-head">
+        <div>
+          <h3>Money Replay</h3>
+          <span class="muted">
+            This month as a chronological story
+          </span>
+        </div>
+      </div>
+
+      <div class="timeline">
+
+        ${
+          a.length
+            ? a.map(t=>`
+                <div class="timeline-item">
+
+                  <div class="row-title">
+                    ${esc(t.title)}
+                  </div>
+
+                  <div class="row-sub">
+                    ${dateText(t.transaction_date)}
+                    · ${esc(t.category)}
+                    ${t.note?" · "+esc(t.note):""}
+                  </div>
+
+                  <div class="amount ${t.type==="income"?"positive":"negative"}">
+                    ${t.type==="income"?"+":"−"}${money(t.amount)}
+                  </div>
+
+                </div>
+              `).join("")
+            : `<div class="empty">
+                Nothing recorded this month yet.
+              </div>`
+        }
+
+      </div>
+    </div>
+  `;
+};
+
+
+views.patterns=()=>{
+  const t=monthTx();
+  const c=catTotals(t);
+  const i=inc(t);
+  const e=exp(t);
+  const days={};
+
+  t.filter(x=>x.type==="expense").forEach(x=>{
+    const d=new Date(
+      x.transaction_date+"T00:00:00"
+    ).toLocaleDateString(
+      undefined,
+      {weekday:"long"}
+    );
+
+    days[d]=(days[d]||0)+Number(x.amount);
+  });
+
+  const top=Object.entries(days)
+    .sort((a,b)=>b[1]-a[1])[0];
+
+  return `
+    <div class="grid stats">
+
+      ${stat(
+        "Savings rate",
+        i
+          ? Math.max(0,(i-e)/i*100).toFixed(1)+"%"
+          : "—",
+        "positive"
+      )}
+
+      ${stat("Transactions",t.length)}
+
+      ${stat(
+        "Categories used",
+        Object.keys(c).length
+      )}
+
+      ${stat(
+        "Top day",
+        top?top[0]:"—"
+      )}
+
+    </div>
+
+    <div class="grid two" style="margin-top:16px">
+
+      <div class="card">
+        <h3>Category pattern</h3>
+        ${bars(c)}
+      </div>
+
+      <div class="card">
+        <h3>Day-of-week pattern</h3>
+
+        ${
+          top
+            ? `
+              <p class="kpi">${esc(top[0])}</p>
+              <p class="muted">
+                ${money(top[1])} spent on your
+                highest-spend weekday this month.
+              </p>
+            `
+            : `
+              <div class="empty">
+                Not enough data yet.
+              </div>
+            `
+        }
+
+      </div>
+
+    </div>
+  `;
+};
+
+
+views.detective=()=>{
+  const t=monthTx();
+  const e=t.filter(x=>x.type==="expense");
+  const c=catTotals(t);
+
+  const top=Object.entries(c)
+    .sort((a,b)=>b[1]-a[1])[0];
+
+  const big=e
+    .slice()
+    .sort((a,b)=>Number(b.amount)-Number(a.amount))[0];
+
+  const missing=t.filter(x=>!x.note).length;
+
+  return `
+    <div class="grid two">
+
+      <div class="finding">
+        <b>Largest category</b>
+        <span class="muted">
+          ${
+            top
+              ? `${esc(top[0])} · ${money(top[1])}`
+              : "No spending yet."
+          }
+        </span>
+      </div>
+
+      <div class="finding">
+        <b>Biggest expense</b>
+        <span class="muted">
+          ${
+            big
+              ? `${esc(big.title)} · ${money(big.amount)}`
+              : "No expenses yet."
+          }
+        </span>
+      </div>
+
+      <div class="finding">
+        <b>Memory quality</b>
+        <span class="muted">
+          ${
+            missing
+              ? `${missing} record(s) have no note.`
+              : "Your recent records have useful context."
+          }
+        </span>
+      </div>
+
+      <div class="finding">
+        <b>Pattern watch</b>
+        <span class="muted">
+          ${
+            e.length>=5
+              ? "You have enough recent spending data for stronger analysis."
+              : "Keep recording more transactions for stronger evidence."
+          }
+        </span>
+      </div>
+
+    </div>
+  `;
+};
+
+
+views.forecast=()=>{
+  const i=inc(monthTx());
+  const e=exp(monthTx());
+
+  const daily=
+    e/Math.max(1,new Date().getDate());
+
+  const projected=
+    i-daily*30;
+
+  return `
+    <div class="hero">
+
+      <p class="eyebrow">30-DAY MONEY WEATHER</p>
+
+      <h3>${money(projected)}</h3>
+
+      <p>
+        A simple planning estimate based on this month's
+        recorded income and average daily spending.
+      </p>
+
+    </div>
+
+    <div class="grid two">
+
+      <div class="card">
+        <h3>Average daily spending</h3>
+        <p class="kpi">${money(daily)}</p>
+      </div>
+
+      <div class="card">
+        <h3>Current-month net</h3>
+        <p class="kpi">${money(i-e)}</p>
+      </div>
+
+    </div>
+  `;
+};
+
+
+views.budgets=()=>`
+  <div class="card">
+
+    <div class="card-head">
+      <h3>Your budgets</h3>
+      <button class="primary" id="addBudget">
+        + Add budget
+      </button>
+    </div>
+
+    ${
+      state.budgets.length
+        ? state.budgets.map(b=>{
+            const s=exp(
+              monthTx().filter(
+                t=>t.category===b.category
+              )
+            );
+
+            const p=Math.min(
+              100,
+              s/Number(b.amount||1)*100
+            );
+
+            return `
+              <div class="goal">
+
+                <div class="row">
+
+                  <div>
+                    <b>${esc(b.category)}</b>
+
+                    <div class="row-sub">
+                      ${money(s)} of ${money(b.amount)}
+                    </div>
+                  </div>
+
+                  <b>${p.toFixed(0)}%</b>
+
+                </div>
+
+                <div class="progress">
+                  <i style="width:${p}%"></i>
+                </div>
+
+              </div>
+            `;
+          }).join("")
+        : `
+          <div class="empty">
+            No budgets yet.
+          </div>
+        `
+    }
+
+  </div>
+`;
+
+
+views.goals=()=>`
+  <div class="card">
+
+    <div class="card-head">
+      <h3>Savings goals</h3>
+
+      <button class="primary" id="addGoal">
+        + Add goal
+      </button>
+    </div>
+
+    ${
+      state.goals.length
+        ? state.goals.map(g=>{
+            const p=Math.min(
+              100,
+              Number(g.saved_amount||0)/
+              Number(g.target_amount||1)*100
+            );
+
+            return `
+              <div class="goal">
+
+                <div class="row">
+
+                  <div>
+                    <b>${esc(g.name)}</b>
+
+                    <div class="row-sub">
+                      ${money(g.saved_amount||0)}
+                      saved of
+                      ${money(g.target_amount)}
+                    </div>
+                  </div>
+
+                  <b>${p.toFixed(0)}%</b>
+
+                </div>
+
+                <div class="progress">
+                  <i style="width:${p}%"></i>
+                </div>
+
+              </div>
+            `;
+          }).join("")
+        : `
+          <div class="empty">
+            No goals yet.
+          </div>
+        `
+    }
+
+  </div>
+`;
+
+
+views.recurring=()=>`
+  <div class="card">
+
+    <h3>Recurring money</h3>
+
+    <p class="muted">
+      Keep track of payments and income that repeat.
+      Automation will be added in a future feature pass.
+    </p>
+
+  </div>
+`;
+
+
+/* ---------- CALCULATOR ---------- */
+
+views.calculator=()=>`
+  <div class="grid two">
+
+    <div class="card">
+
+      <h3>Quick Calculator</h3>
+
+      <p class="muted">
+        Do everyday money calculations without leaving FinMemory.
+      </p>
+
+      <label>
+        First number
+        <input id="calcA" type="number" step="any" placeholder="0">
+      </label>
+
+      <label>
+        Operation
+        <select id="calcOp">
+          <option value="+">Add</option>
+          <option value="-">Subtract</option>
+          <option value="*">Multiply</option>
+          <option value="/">Divide</option>
+          <option value="%">Percentage of</option>
+        </select>
+      </label>
+
+      <label>
+        Second number
+        <input id="calcB" type="number" step="any" placeholder="0">
+      </label>
+
+      <button class="primary" id="calculateBtn">
+        Calculate
+      </button>
+
+      <div id="calcResult" class="assistant-answer">
+        Your result will appear here.
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <h3>Money tools</h3>
+
+      <label>
+        Amount
+        <input id="calcMoney" type="number" step="any" placeholder="0">
+      </label>
+
+      <label>
+        Percentage
+        <input id="calcPercent" type="number" step="any" placeholder="10">
+      </label>
+
+      <button class="ghost" id="discountBtn">
+        Calculate percentage
+      </button>
+
+      <div id="discountResult" class="assistant-answer">
+        Useful for discounts, fees and simple estimates.
+      </div>
+
+    </div>
+
+  </div>
+`;
+
+
+/* ---------- MONEY ASSISTANT ---------- */
+
+views.assistant=()=>`
+  <div class="grid two">
+
+    <div class="card">
+
+      <h3>Money Assistant</h3>
+
+      <p class="muted">
+        Ask questions about the financial records you've saved in FinMemory.
+      </p>
+
+      <div class="toolbar">
+
+        <input
+          class="search"
+          id="ask"
+          placeholder="How much did I spend this month?"
+        >
+
+        <button class="primary" id="askBtn">
+          Ask
+        </button>
+
+      </div>
+
+      <div id="answer" class="assistant-answer">
+        Try asking about spending, income, your biggest category,
+        balance, savings, or a category.
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <h3>Quick questions</h3>
+
+      <p class="muted">
+        You can ask things like:
+      </p>
+
+      <div class="list">
+
+        <button class="ghost assistant-question">
+          How much did I spend this month?
+        </button>
+
+        <button class="ghost assistant-question">
+          How much income did I record?
+        </button>
+
+        <button class="ghost assistant-question">
+          What is my biggest spending category?
+        </button>
+
+        <button class="ghost assistant-question">
+          What is my net this month?
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+`;
+
+
+/* ---------- SETTINGS ---------- */
+
+views.settings=()=>`
+  <div class="grid two">
+
+    <div class="card">
+
+      <div class="card-head">
+        <div>
+          <h3>Your profile</h3>
+          <p class="muted">
+            Personalize how FinMemory works for you.
+          </p>
+        </div>
+      </div>
+
+      <label>
+        Display name
+        <input
+          id="profileName"
+          value="${esc(state.profile?.display_name||"")}"
+          placeholder="Your name"
+        >
+      </label>
+
+      <label>
+        Currency
+
+        <select id="profileCurrency">
+          ${
+            ["NGN","USD","GBP","EUR","GHS","KES","ZAR"]
+              .map(c=>`
+                <option
+                  ${state.profile?.currency===c?"selected":""}
+                >
+                  ${c}
+                </option>
+              `).join("")
+          }
+        </select>
+
+      </label>
+
+      <button class="primary" id="saveProfile">
+        Save profile
+      </button>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="card-head">
+        <div>
+          <h3>Your data</h3>
+          <p class="muted">
+            Keep a copy of your financial history.
+          </p>
+        </div>
+      </div>
+
+      <div class="finding">
+        <b>Financial records</b>
+        <span class="muted">
+          ${state.transactions.length} saved memories
+        </span>
+      </div>
+
+      <div class="finding">
+        <b>Categories</b>
+        <span class="muted">
+          ${cats().length} available categories
+        </span>
+      </div>
+
+      <button class="ghost" id="exportData">
+        Export my data
+      </button>
+
+    </div>
+
+
+    <div class="card">
+
+      <h3>About FinMemory</h3>
+
+      <p class="muted">
+        FinMemory is designed around remembering your money,
+        finding patterns and making better-informed plans.
+      </p>
+
+      <div class="finding">
+        <b>Account</b>
+        <span class="muted">
+          ${esc($("userEmail")?.textContent||"Signed in")}
+        </span>
+      </div>
+
+      <div class="finding">
+        <b>Security</b>
+        <span class="muted">
+          Your financial rows are protected by Supabase Row Level Security.
+        </span>
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <h3>FinMemory tools</h3>
+
+      <p class="muted">
+        Quickly jump to the tools you use most.
+      </p>
+
+      <div class="toolbar">
+
+        <button class="ghost" id="settingsDiary">
+          Money Diary
+        </button>
+
+        <button class="ghost" id="settingsCalendar">
+          Calendar
+        </button>
+
+        <button class="ghost" id="settingsCalculator">
+          Calculator
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+`;
+
+
+/* ---------- TRANSACTION ---------- */
+
+function openTx(){
+
+  $("txDate").value=today();
+  $("txAmount").value="";
+  $("txTitle").value="";
+  $("txNote").value="";
+  $("txTags").value="";
+
+  currentType="expense";
+
+  document.querySelectorAll(".type-btn").forEach(b=>{
+    b.classList.toggle(
+      "active",
+      b.dataset.type===currentType
+    );
+  });
+
+  $("txCategory").innerHTML=cats()
+    .map(c=>`
+      <option value="${esc(c.name)}">
+        ${c.icon} ${esc(c.name)}
+      </option>
+    `)
+    .join("");
+
+  $("transactionModal").classList.remove("hidden");
+}
+
+
+async function saveTx(){
+
+  try{
+
+    const user=(await sb.auth.getUser()).data.user;
+
+    let category=$("txCategory").value;
+
+    /*
+      If Other is selected, let the user describe what
+      the spending actually was.
+    */
+    if(category==="Other"){
+
+      const custom=prompt(
+        "What was this spending for?"
+      );
+
+      if(custom===null){
+        return;
+      }
+
+      if(custom.trim()){
+        category=custom.trim();
+      }
+    }
+
+    const row={
+      user_id:user.id,
+      type:currentType,
+      amount:Number($("txAmount").value),
+      title:$("txTitle").value.trim(),
+      category,
+      transaction_date:$("txDate").value,
+      note:$("txNote").value.trim()||null,
+      tags:$("txTags").value
+        .split(",")
+        .map(x=>x.trim())
+        .filter(Boolean)
+    };
+
+    if(!row.amount || !row.title){
+      return toast("Add an amount and title.");
+    }
+
+    const {error}=await sb
+      .from("transactions")
+      .insert(row);
+
+    if(error){
+      return toast(error.message);
+    }
+
+    $("transactionModal").classList.add("hidden");
+
+    toast("Money memory saved.");
+
+    await refresh();
+
+  }catch(error){
+
+    console.error("Transaction error:",error);
+
+    toast(
+      "We couldn't save that money memory."
+    );
+  }
+}
+
+
+/* ---------- DIARY ---------- */
+
+function diaryResults(){
+
+  const q=(
+    $("diarySearch")?.value||""
+  ).toLowerCase();
+
+  const ty=$("diaryType")?.value||"";
+  const ca=$("diaryCat")?.value||"";
+
+  let a=state.transactions.filter(t=>
+    (!ty||t.type===ty)&&
+    (!ca||t.category===ca)
+  );
+
+  if(q){
+
+    a=a.filter(t=>
+      [
+        t.title,
+        t.category,
+        t.note,
+        t.tags?.join(" "),
+        t.transaction_date,
+        t.amount
+      ]
+      .join(" ")
+      .toLowerCase()
+      .includes(q)
+    );
+
+  }
+
+  const results=$("diaryResults");
+
+  if(!results)return;
+
+  results.innerHTML=a.length
+    ? a.map(txRow).join("")
+    : `<div class="empty">No memories match.</div>`;
+}
+
+
+/* ---------- PROFILE ---------- */
+
+async function saveProfile(){
+
+  try{
+
+    const user=(await sb.auth.getUser()).data.user;
+
+    const {error}=await sb
+      .from("profiles")
+      .upsert({
+        id:user.id,
+        display_name:$("profileName").value.trim(),
+        currency:$("profileCurrency").value
+      });
+
+    if(error){
+      return toast(error.message);
+    }
+
+    toast("Profile saved.");
+
+    await refresh();
+
+  }catch(error){
+
+    console.error("Profile error:",error);
+
+    toast("Couldn't save your profile.");
+  }
+}
+
+
+/* ---------- SIMPLE ASSISTANT ---------- */
+
+function ask(){
+
+  const input=$("ask");
+
+  if(!input)return;
+
+  const q=input.value.trim().toLowerCase();
+
+  if(!q){
+    $("answer").textContent=
+      "Type a question about your financial records.";
+    return;
+  }
+
+  const t=monthTx();
+  const i=inc(t);
+  const e=exp(t);
+  const c=catTotals(t);
+
+  const top=Object.entries(c)
+    .sort((a,b)=>b[1]-a[1])[0];
+
+  let answer;
+
+  if(
+    q.includes("spend")||
+    q.includes("spent")||
+    q.includes("expense")
+  ){
+
+    answer=
+      `You recorded ${money(e)} of spending this month.`;
+
+  }else if(
+    q.includes("earn")||
+    q.includes("income")
+  ){
+
+    answer=
+      `You recorded ${money(i)} of income this month.`;
+
+  }else if(
+    q.includes("biggest")||
+    q.includes("largest")||
+    q.includes("top categor")
+  ){
+
+    answer=top
+      ? `${top[0]} is your largest spending category at ${money(top[1])}.`
+      : "You don't have any spending categories recorded yet.";
+
+  }else if(
+    q.includes("balance")||
+    q.includes("net")
+  ){
+
+    answer=
+      `Your recorded net this month is ${money(i-e)}.`;
+
+  }else if(q.includes("saving")){
+
+    const rate=i
+      ? Math.max(0,(i-e)/i*100)
+      : 0;
+
+    answer=
+      `Your recorded savings rate this month is ${rate.toFixed(1)}%.`;
+
+  }else if(
+    q.includes("transaction")||
+    q.includes("records")
+  ){
+
+    answer=
+      `You have ${t.length} recorded transaction${t.length===1?"":"s"} this month.`;
+
+  }else{
+
+    answer=
+      "I can answer questions about your spending, income, largest category, net amount, savings rate, and recorded transactions.";
+
+  }
+
+  $("answer").textContent=answer;
+}
+
+
+/* ---------- CALCULATOR ---------- */
+
+function calculateMoney(){
+
+  const a=Number($("calcA").value);
+  const b=Number($("calcB").value);
+  const op=$("calcOp").value;
+
+  if(!Number.isFinite(a)||!Number.isFinite(b)){
+    $("calcResult").textContent=
+      "Enter both numbers first.";
+    return;
+  }
+
+  let result;
+
+  if(op==="+")result=a+b;
+  if(op==="-")result=a-b;
+  if(op==="*")result=a*b;
+
+  if(op==="/"){
+
+    if(b===0){
+      $("calcResult").textContent=
+        "You can't divide by zero.";
+      return;
+    }
+
+    result=a/b;
+  }
+
+  if(op==="%"){
+    result=a*(b/100);
+  }
+
+  $("calcResult").textContent=
+    `Result: ${money(result)}`;
+}
+
+
+function calculatePercentage(){
+
+  const amount=Number($("calcMoney").value);
+  const percent=Number($("calcPercent").value);
+
+  if(!Number.isFinite(amount)||!Number.isFinite(percent)){
+    $("discountResult").textContent=
+      "Enter an amount and percentage first.";
+    return;
+  }
+
+  const result=amount*(percent/100);
+  const remaining=amount-result;
+
+  $("discountResult").textContent=
+    `${percent}% of ${money(amount)} is ${money(result)}. Remaining: ${money(remaining)}.`;
+}
+
+
+/* ---------- CLICK EVENTS ---------- */
+
+document.addEventListener("click",async e=>{
+
+  const nav=e.target.closest(".nav-item");
+
+  if(nav){
+
+    currentView=nav.dataset.view;
+
+    render();
+
+    return;
+  }
+
+
+  if(e.target.id==="retryRender"){
+
+    render();
+
+    return;
+  }
+
+
+  if(
+    [
+      "quickAdd",
+      "mobileAdd",
+      "heroAdd",
+      "diaryAdd",
+      "calAdd"
+    ].includes(e.target.id)
+  ){
+
+    openTx();
+
+    return;
+  }
+
+
+  if(
+    ["heroDiary","openDiary"].includes(e.target.id)
+  ){
+
+    currentView="diary";
+
+    render();
+
+    return;
+  }
+
+
+  const closeButton=
+    e.target.closest("[data-close]");
+
+  if(closeButton){
+
+    const target=$(closeButton.dataset.close);
+
+    if(target){
+      target.classList.add("hidden");
+    }
+
+    return;
+  }
+
+
+  if(
+    e.target.classList.contains("type-btn")
+  ){
+
+    currentType=e.target.dataset.type;
+
+    document.querySelectorAll(".type-btn").forEach(b=>{
+      b.classList.toggle(
+        "active",
+        b.dataset.type===currentType
+      );
+    });
+
+    return;
+  }
+
+
+  if(e.target.id==="askBtn"){
+
+    ask();
+
+    return;
+  }
+
+
+  if(
+    e.target.classList.contains("assistant-question")
+  ){
+
+    const askInput=$("ask");
+
+    if(askInput){
+
+      askInput.value=
+        e.target.textContent.trim();
+
+      ask();
+    }
+
+    return;
+  }
+
+
+  if(e.target.id==="calculateBtn"){
+
+    calculateMoney();
+
+    return;
+  }
+
+
+  if(e.target.id==="discountBtn"){
+
+    calculatePercentage();
+
+    return;
+  }
+
+
+  if(e.target.id==="logout"){
+
+    await sb.auth.signOut();
+
+    return;
+  }
+
+
+  if(e.target.id==="saveProfile"){
+
+    await saveProfile();
+
+    return;
+  }
+
+
+  if(e.target.id==="exportData"){
+
+    const url=URL.createObjectURL(
+      new Blob(
+        [JSON.stringify(state,null,2)],
+        {type:"application/json"}
+      )
+    );
+
+    const a=document.createElement("a");
+
+    a.href=url;
+    a.download="finmemory-backup.json";
+
+    a.click();
+
+    URL.revokeObjectURL(url);
+
+    toast("Your FinMemory backup was exported.");
+
+    return;
+  }
+
+
+  if(e.target.id==="settingsDiary"){
+
+    currentView="diary";
+    render();
+
+    return;
+  }
+
+
+  if(e.target.id==="settingsCalendar"){
+
+    currentView="calendar";
+    render();
+
+    return;
+  }
+
+
+  if(e.target.id==="settingsCalculator"){
+
+    currentView="calculator";
+    render();
+
+    return;
+  }
+
+
+  if(e.target.id==="addBudget"){
+
+    const category=prompt(
+      "Which category should this monthly budget track?"
+    );
+
+    const amount=Number(
+      prompt("What is the monthly budget amount?")
+    );
+
+    if(category&&amount>0){
+
+      const user=
+        (await sb.auth.getUser()).data.user;
+
+      const {error}=await sb
+        .from("budgets")
+        .insert({
+          user_id:user.id,
+          category,
+          amount
+        });
+
+      if(error){
+
+        toast(error.message);
+
+      }else{
+
+        toast("Budget added.");
+
+        await refresh();
+      }
+    }
+
+    return;
+  }
+
+
+  if(e.target.id==="addGoal"){
+
+    const name=prompt(
+      "What is the name of your goal?"
+    );
+
+    const amount=Number(
+      prompt("What is the target amount?")
+    );
+
+    if(name&&amount>0){
+
+      const user=
+        (await sb.auth.getUser()).data.user;
+
+      const {error}=await sb
+        .from("goals")
+        .insert({
+          user_id:user.id,
+          name,
+          target_amount:amount,
+          saved_amount:0
+        });
+
+      if(error){
+
+        toast(error.message);
+
+      }else{
+
+        toast("Goal added.");
+
+        await refresh();
+      }
+    }
+
+    return;
+  }
+
+});
+
+
+/* ---------- INPUT EVENTS ---------- */
+
+document.addEventListener("input",e=>{
+
+  if(
+    [
+      "diarySearch",
+      "diaryType",
+      "diaryCat"
+    ].includes(e.target.id)
+  ){
+
+    diaryResults();
+  }
+
+});
+
+
+/* ---------- KEYBOARD SUPPORT ---------- */
+
+document.addEventListener("keydown",e=>{
+
+  if(
+    e.key==="Enter" &&
+    e.target.id==="ask"
+  ){
+
+    e.preventDefault();
+
+    ask();
+  }
+
+});
+
+
+/* ---------- TRANSACTION FORM ---------- */
+
+$("transactionForm").addEventListener(
+  "submit",
+  e=>{
+    e.preventDefault();
+    saveTx();
+  }
+);
+
+
+/* ---------- AUTH TABS ---------- */
+
+document.querySelectorAll(".auth-tab").forEach(b=>
+
+  b.addEventListener("click",()=>{
+
+    authMode=b.dataset.auth;
+
+    document.querySelectorAll(".auth-tab")
+      .forEach(x=>
+        x.classList.toggle(
+          "active",
+          x===b
+        )
+      );
+
+    $("nameWrap").classList.toggle(
+      "hidden",
+      authMode!=="signup"
+    );
+
+    $("authSubmit").textContent=
+      authMode==="signup"
+        ? "Create account"
+        : "Log in";
+
+    $("authMessage").textContent="";
+  })
+
+);
+
+
+/* ---------- AUTH FORM ---------- */
+
+$("authForm").addEventListener(
+  "submit",
+  async e=>{
+
+    e.preventDefault();
+
+    $("authMessage").textContent=
+      "Working…";
+
+    const email=
+      $("authEmail").value.trim();
+
+    const password=
+      $("authPassword").value;
+
+    if(authMode==="signup"){
+
+      const {
+        data,
+        error
+      }=await sb.auth.signUp({
+        email,
+        password,
+        options:{
+          data:{
+            display_name:
+              $("authName").value.trim()
+          }
+        }
+      });
+
+      if(error){
+
+        $("authMessage").textContent=
+          error.message;
+
+      }else{
+
+        $("authMessage").textContent=
+          data.session
+            ? "Account created."
+            : "Account created. Check your email if confirmation is enabled.";
+      }
+
+    }else{
+
+      const {error}=
+        await sb.auth.signInWithPassword({
+          email,
+          password
+        });
+
+      if(error){
+
+        $("authMessage").textContent=
+          error.message;
+      }
+    }
+  }
+);
+
+
+/* ---------- START FINMEMORY ---------- */
+
 init();
