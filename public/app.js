@@ -36,27 +36,25 @@ async function load(){
   state.profile=q[0].data||{id:uid,display_name:"",currency:"NGN"};state.transactions=q[1].data||[];state.categories=q[2].data||[];state.budgets=q[3].data||[];state.goals=q[4].data||[];
   if(!q[0].data)await sb.from("profiles").insert(state.profile);
 }
- async function init(){
+  async function init(){
   try{
     const supabaseUrl="https://cgnlmbsdtqbkajtkqssm.supabase.co";
-
-    // Paste your Supabase PUBLISHABLE key between the quotes below.
     const supabaseKey="sb_publishable_k51uAkJt_K5K0SdMM5twdg_eada8Jtg";
 
-    if(!supabaseUrl || !supabaseKey || supabaseKey==="sb_publishable_k51uAkJt_K5K0SdMM5twdg_eada8Jtg"){
+    if(!supabaseUrl || !supabaseKey){
       throw new Error("Supabase configuration is missing.");
     }
 
     sb=window.supabase.createClient(supabaseUrl,supabaseKey);
 
     const {data:{session},error}=await sb.auth.getSession();
-    if(error)throw error;
+    if(error) throw error;
 
-    if(session)await enter(session);
+    if(session) await enter(session);
     else showAuth();
 
     sb.auth.onAuthStateChange(async(_,s)=>{
-      if(s)await enter(s);
+      if(s) await enter(s);
       else showAuth();
     });
 
