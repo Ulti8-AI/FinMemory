@@ -1850,44 +1850,132 @@ document.addEventListener("click",async e=>{
   }
 
 
-  if(e.target.id==="addBudget"){
+   if(e.target.id==="addBudget"){
 
-    const category=prompt(
-      "Which category should this monthly budget track?"
-    );
+  const modal=document.createElement("div");
+
+  modal.className="fm-budget-modal";
+
+  modal.innerHTML=`
+    <div class="fm-budget-box">
+
+      <div class="fm-budget-head">
+        <div>
+          <h3>Create a monthly budget</h3>
+          <p>Choose a category and set your spending limit.</p>
+        </div>
+
+        <button
+          type="button"
+          class="fm-budget-close"
+          data-budget-close
+        >
+          ×
+        </button>
+      </div>
+
+      <form id="budgetForm">
+
+        <label>
+          Category
+
+          <select id="budgetCategory" required>
+            ${cats().map(c=>`
+              <option value="${esc(c.name)}">
+                ${esc(c.name)}
+              </option>
+            `).join("")}
+          </select>
+        </label>
+
+        <label>
+          Monthly budget
+
+          <input
+            id="budgetAmount"
+            type="number"
+            min="0.01"
+            step="0.01"
+            placeholder="e.g. 50000"
+            required
+          >
+        </label>
+
+        <button
+          type="submit"
+          class="primary fm-budget-save"
+        >
+          Create budget
+        </button>
+
+      </form>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  const form=modal.querySelector("#budgetForm");
+  const close=modal.querySelector("[data-budget-close]");
+
+  close.addEventListener("click",()=>{
+    modal.remove();
+  });
+
+  modal.addEventListener("click",e=>{
+    if(e.target===modal){
+      modal.remove();
+    }
+  });
+
+  form.addEventListener("submit",async e=>{
+
+    e.preventDefault();
+
+    const category=
+      modal.querySelector("#budgetCategory")
+        .value;
 
     const amount=Number(
-      prompt("What is the monthly budget amount?")
+      modal.querySelector("#budgetAmount")
+        .value
     );
 
-    if(category&&amount>0){
+    if(!category||amount<=0){
 
-      const user=
-        (await sb.auth.getUser()).data.user;
+      toast("Enter a category and a valid budget amount.");
 
-      const {error}=await sb
-        .from("budgets")
-        .insert({
-          user_id:user.id,
-          category,
-          amount
-        });
-
-      if(error){
-
-        toast(error.message);
-
-      }else{
-
-        toast("Budget added.");
-
-        await refresh();
-      }
+      return;
     }
 
-    return;
-  }
+    const user=
+      (await sb.auth.getUser()).data.user;
 
+    const {error}=await sb
+      .from("budgets")
+      .insert({
+        user_id:user.id,
+        category,
+        amount
+      });
+
+    if(error){
+
+      toast(error.message);
+
+      return;
+    }
+
+    modal.remove();
+
+    toast("Budget added.");
+
+    await refresh();
+
+  });
+
+  return;
+}
 
    if(e.target.id==="addGoal"){
 
