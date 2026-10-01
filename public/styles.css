@@ -792,3 +792,35 @@
   background:#ffecec;
   color:#c44;
 }
+.dashboard-goals,
+.dashboard-budgets{
+  display:grid;
+  gap:16px;
+}
+
+.dashboard-goal,
+.dashboard-budget{
+  display:grid;
+  gap:8px;
+}
+
+.dashboard-goal .row,
+.dashboard-budget .row{
+  align-items:flex-start;
+}
+
+.dashboard-goal .progress,
+.dashboard-budget .progress{
+  height:8px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#eef0f4;
+}
+
+.dashboard-goal .progress i,
+.dashboard-budget .progress i{
+  display:block;
+  height:100%;
+  border-radius:999px;
+  background:#6874f5;
+}
