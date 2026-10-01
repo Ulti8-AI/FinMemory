@@ -392,17 +392,24 @@ async function refresh(){
 /* ---------- VIEWS ---------- */
 
 const views={};
+ views.overview=()=>{
 
-views.overview=()=>{
   const t=monthTx();
   const i=inc(t);
   const e=exp(t);
   const c=catTotals(t);
-  const top=Object.entries(c).sort((a,b)=>b[1]-a[1])[0];
+  const top=Object.entries(c)
+    .sort((a,b)=>b[1]-a[1])[0];
+
   const recent=state.transactions.slice(0,6);
+
+  const goals=state.goals.slice(0,3);
+
+  const budgets=state.budgets.slice(0,3);
 
   return `
     <div class="hero">
+
       <p class="eyebrow">YOUR MONEY STORY</p>
 
       <h3>
@@ -415,47 +422,242 @@ views.overview=()=>{
       </p>
 
       <div class="hero-actions">
-        <button class="primary" id="heroAdd">+ Record money</button>
-        <button class="ghost" id="heroDiary">Open diary</button>
+        <button class="primary" id="heroAdd">
+          + Record money
+        </button>
+
+        <button class="ghost" id="heroDiary">
+          Open diary
+        </button>
       </div>
+
     </div>
 
+
     <div class="grid stats">
-      ${stat("This month's income",money(i),"positive")}
-      ${stat("This month's spending",money(e),"negative")}
-      ${stat("Net this month",money(i-e),i>=e?"positive":"negative")}
-      ${stat("Largest category",top?esc(top[0]):"—")}
+
+      ${stat(
+        "This month's income",
+        money(i),
+        "positive"
+      )}
+
+      ${stat(
+        "This month's spending",
+        money(e),
+        "negative"
+      )}
+
+      ${stat(
+        "Net this month",
+        money(i-e),
+        i>=e?"positive":"negative"
+      )}
+
+      ${stat(
+        "Largest category",
+        top?esc(top[0]):"—"
+      )}
+
     </div>
+
 
     <div class="grid section-grid" style="margin-top:16px">
 
+
       <div class="card">
+
         <div class="card-head">
+
           <h3>Recent memories</h3>
-          <button class="ghost" id="openDiary">View all</button>
+
+          <button
+            class="ghost"
+            id="openDiary"
+          >
+            View all
+          </button>
+
         </div>
 
         <div class="list">
+
           ${
             recent.length
               ? recent.map(txRow).join("")
-              : `<div class="empty">Your first money memory is waiting.</div>`
+              : `
+                <div class="empty">
+                  Your first money memory is waiting.
+                </div>
+              `
           }
+
         </div>
+
       </div>
 
+
       <div class="card">
+
         <div class="card-head">
           <h3>Spending pulse</h3>
         </div>
 
         ${bars(c)}
+
       </div>
+
+
+      ${
+        goals.length
+          ? `
+            <div class="card">
+
+              <div class="card-head">
+                <h3>Goals in progress</h3>
+
+                <button
+                  class="ghost"
+                  data-view="goals"
+                >
+                  View goals
+                </button>
+              </div>
+
+              <div class="dashboard-goals">
+
+                ${
+                  goals.map(g=>{
+
+                    const target=
+                      Number(g.target_amount||0);
+
+                    const saved=
+                      Number(g.saved_amount||0);
+
+                    const p=target>0
+                      ? Math.min(
+                          100,
+                          saved/target*100
+                        )
+                      : 0;
+
+                    return `
+                      <div class="dashboard-goal">
+
+                        <div class="row">
+
+                          <div>
+                            <b>${esc(g.name)}</b>
+
+                            <div class="row-sub">
+                              ${money(saved)}
+                              of
+                              ${money(target)}
+                            </div>
+                          </div>
+
+                          <b>
+                            ${p.toFixed(0)}%
+                          </b>
+
+                        </div>
+
+                        <div class="progress">
+                          <i style="width:${p}%"></i>
+                        </div>
+
+                      </div>
+                    `;
+
+                  }).join("")
+                }
+
+              </div>
+
+            </div>
+          `
+          : ""
+      }
+
+
+      ${
+        budgets.length
+          ? `
+            <div class="card">
+
+              <div class="card-head">
+                <h3>Budget watch</h3>
+
+                <button
+                  class="ghost"
+                  data-view="budgets"
+                >
+                  View budgets
+                </button>
+              </div>
+
+              <div class="dashboard-budgets">
+
+                ${
+                  budgets.map(b=>{
+
+                    const spent=
+                      c[b.category]||0;
+
+                    const limit=
+                      Number(b.amount||0);
+
+                    const p=limit>0
+                      ? Math.min(
+                          100,
+                          spent/limit*100
+                        )
+                      : 0;
+
+                    return `
+                      <div class="dashboard-budget">
+
+                        <div class="row">
+
+                          <div>
+                            <b>
+                              ${esc(b.category)}
+                            </b>
+
+                            <div class="row-sub">
+                              ${money(spent)}
+                              of
+                              ${money(limit)}
+                            </div>
+                          </div>
+
+                          <b>
+                            ${p.toFixed(0)}%
+                          </b>
+
+                        </div>
+
+                        <div class="progress">
+                          <i style="width:${p}%"></i>
+                        </div>
+
+                      </div>
+                    `;
+
+                  }).join("")
+                }
+
+              </div>
+
+            </div>
+          `
+          : ""
+      }
 
     </div>
   `;
 };
-
 
 views.diary=()=>`
   <div class="card">
