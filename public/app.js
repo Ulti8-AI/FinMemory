@@ -140,6 +140,38 @@ function categoryIcon(type){
 
   return icons[type]||icons.other;
 }
+function renderCategoryPicker(){
+  const picker=$("categoryPicker");
+  const select=$("txCategory");
+
+  if(!picker||!select)return;
+
+  const categories=cats();
+
+  select.innerHTML=categories.map(c=>`
+    <option value="${esc(c.name)}">${esc(c.name)}</option>
+  `).join("");
+
+  if(!select.value && categories.length){
+    select.value=categories[0].name;
+  }
+
+  picker.innerHTML=categories.map(c=>`
+    <button
+      type="button"
+      class="category-choice ${select.value===c.name?"selected":""}"
+      data-category="${esc(c.name)}"
+    >
+      <span class="category-art">
+        ${categoryIcon(c.icon)}
+      </span>
+
+      <span class="category-name">
+        ${esc(c.name)}
+      </span>
+    </button>
+  `).join("");
+}
 const $=id=>document.getElementById(id);
 const money=n=>new Intl.NumberFormat(undefined,{style:"currency",currency:state.profile?.currency||"NGN",maximumFractionDigits:2}).format(Number(n)||0);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
