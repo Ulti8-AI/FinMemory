@@ -1348,6 +1348,12 @@ views.goals=()=>`
     .filter(t=>t.is_recurring)
     .slice(0,12);
 
+  const frequencyLabel={
+    weekly:"Weekly",
+    monthly:"Monthly",
+    yearly:"Yearly"
+  };
+
   return `
 
     <div class="recurring-intro">
@@ -1357,12 +1363,11 @@ views.goals=()=>`
       <h3>Remember what repeats.</h3>
 
       <p>
-        Keep an eye on regular payments and income
+        Keep track of regular payments and income
         so recurring money never catches you by surprise.
       </p>
 
     </div>
-
 
     <div class="grid stats">
 
@@ -1372,7 +1377,21 @@ views.goals=()=>`
       )}
 
       ${stat(
-        "Monthly recurring",
+        "Recurring expenses",
+        recurring
+          .filter(x=>x.type==="expense")
+          .length
+      )}
+
+      ${stat(
+        "Recurring income",
+        recurring
+          .filter(x=>x.type==="income")
+          .length
+      )}
+
+      ${stat(
+        "Monthly view",
         recurring.length
           ? money(
               recurring
@@ -1385,22 +1404,7 @@ views.goals=()=>`
           : "—"
       )}
 
-      ${stat(
-        "Income repeats",
-        recurring.filter(
-          x=>x.type==="income"
-        ).length
-      )}
-
-      ${stat(
-        "Expense repeats",
-        recurring.filter(
-          x=>x.type==="expense"
-        ).length
-      )}
-
     </div>
-
 
     <div
       class="card"
@@ -1413,7 +1417,7 @@ views.goals=()=>`
           <h3>Your recurring money</h3>
 
           <p class="muted">
-            Regular money memories you've marked as recurring.
+            Regular money memories you want FinMemory to remember.
           </p>
         </div>
 
@@ -1425,7 +1429,6 @@ views.goals=()=>`
         </button>
 
       </div>
-
 
       ${
         recurring.length
@@ -1451,13 +1454,17 @@ views.goals=()=>`
 
                       <div class="row-sub">
                         ${esc(t.category)}
-                        · ${dateText(t.transaction_date)}
+                        ·
+                        ${
+                          frequencyLabel[
+                            t.recurring_frequency
+                          ] || "Recurring"
+                        }
                       </div>
 
                     </div>
 
                   </div>
-
 
                   <div class="recurring-item-right">
 
@@ -1476,7 +1483,11 @@ views.goals=()=>`
                     </div>
 
                     <span class="recurring-badge">
-                      Repeats
+                      ${
+                        frequencyLabel[
+                          t.recurring_frequency
+                        ] || "Repeats"
+                      }
                     </span>
 
                   </div>
@@ -1499,7 +1510,7 @@ views.goals=()=>`
 
               <span>
                 Add a regular payment or income and
-                FinMemory will keep it in this section.
+                FinMemory will remember it here.
               </span>
 
               <button
@@ -1517,7 +1528,6 @@ views.goals=()=>`
 
   `;
 };
-
 /* ---------- CALCULATOR ---------- */
 
  views.calculator=()=>`
