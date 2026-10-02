@@ -2325,6 +2325,22 @@ if(e.target.closest("[data-edit-tx]")){
 
   return;
 }
+  if(e.target.id==="diaryClear"){
+
+  const input=$("diarySearch");
+
+  if(input){
+
+    input.value="";
+
+    input.dispatchEvent(
+      new Event("input",{bubbles:true})
+    );
+
+  }
+
+  return;
+}
 if(e.target.closest("[data-delete-tx]")){
 
   const button=e.target.closest("[data-delete-tx]");
