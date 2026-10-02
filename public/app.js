@@ -674,46 +674,109 @@ const views={};
   `;
 };
 
+ /* ---------- DIARY ---------- */
+
 views.diary=()=>`
-  <div class="card">
+  <div class="card diary-card">
 
-    <div class="toolbar">
+    <div class="diary-head">
 
-      <input
-        class="search"
-        id="diarySearch"
-        placeholder="Search memories, notes, tags, dates…"
+      <div>
+        <p class="eyebrow">MONEY MEMORY</p>
+
+        <h3>Your financial diary</h3>
+
+        <p class="diary-subtitle">
+          Search your money history and find the memory behind every entry.
+        </p>
+      </div>
+
+      <button
+        class="primary"
+        id="diaryAdd"
       >
-
-      <select class="search" id="diaryType">
-        <option value="">All types</option>
-        <option value="expense">Expenses</option>
-        <option value="income">Income</option>
-      </select>
-
-      <select class="search" id="diaryCat">
-        <option value="">All categories</option>
-        ${cats().map(c=>`
-          <option value="${esc(c.name)}">
-            ${esc(c.name)}
-          </option>
-        `).join("")}
-      </select>
-
-      <button class="primary" id="diaryAdd">+ Record</button>
+        + Record
+      </button>
 
     </div>
 
-    <div class="notice">
-      Money Memory searches titles, categories, notes, tags, dates and amounts.
+
+    <div class="diary-search">
+
+      <div class="diary-search-main">
+
+        <span class="diary-search-icon">
+          ⌕
+        </span>
+
+        <input
+          id="diarySearch"
+          class="diary-search-input"
+          placeholder="Search your money memories..."
+          autocomplete="off"
+        >
+
+        <button
+          type="button"
+          class="diary-search-clear"
+          id="diaryClear"
+          title="Clear search"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div class="diary-filters">
+
+        <select
+          class="diary-filter"
+          id="diaryType"
+        >
+          <option value="">All types</option>
+          <option value="expense">Expenses</option>
+          <option value="income">Income</option>
+        </select>
+
+
+        <select
+          class="diary-filter"
+          id="diaryCat"
+        >
+          <option value="">All categories</option>
+
+          ${cats().map(c=>`
+            <option value="${esc(c.name)}">
+              ${esc(c.name)}
+            </option>
+          `).join("")}
+
+        </select>
+
+      </div>
+
     </div>
 
-    <div id="diaryResults" class="list" style="margin-top:10px"></div>
+
+    <div class="diary-memory-bar">
+
+      <span>
+        Search titles, categories, notes, tags, dates and amounts.
+      </span>
+
+      <span id="diaryCount"></span>
+
+    </div>
+
+
+    <div
+      id="diaryResults"
+      class="list diary-results"
+    ></div>
 
   </div>
 `;
-
-
 views.calendar=()=>{
   const n=new Date();
   const y=n.getFullYear();
@@ -2741,18 +2804,89 @@ if(e.target.closest("[data-delete-tx]")){
 document.addEventListener("input",e=>{
 
   if(
-    [
-      "diarySearch",
-      "diaryType",
-      "diaryCat"
-    ].includes(e.target.id)
-  ){
+  e.target.id==="diarySearch" ||
+  e.target.id==="diaryType" ||
+  e.target.id==="diaryCat"
+){
 
-    diaryResults();
+  const search=
+    $("diarySearch")
+      ?.value
+      .trim()
+      .toLowerCase() || "";
+
+  const type=
+    $("diaryType")
+      ?.value || "";
+
+  const category=
+    $("diaryCat")
+      ?.value || "";
+
+  const results=state.transactions.filter(t=>{
+
+    if(type && t.type!==type){
+      return false;
+    }
+
+    if(
+      category &&
+      String(t.category||"").toLowerCase()!==category.toLowerCase()
+    ){
+      return false;
+    }
+
+    if(!search){
+      return true;
+    }
+
+    const searchable=[
+      t.title,
+      t.category,
+      t.note,
+      ...(Array.isArray(t.tags)?t.tags:[]),
+      t.transaction_date,
+      t.amount
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return searchable.includes(search);
+
+  });
+
+  const resultsBox=$("diaryResults");
+
+  if(resultsBox){
+
+    resultsBox.innerHTML=results.length
+      ? results.map(txRow).join("")
+      : `
+        <div class="empty diary-empty">
+          <div class="diary-empty-icon">⌕</div>
+          <b>No memories found</b>
+          <span>
+            Try another search or remove a filter.
+          </span>
+        </div>
+      `;
+
   }
 
-});
+  const count=$("diaryCount");
 
+  if(count){
+
+    count.textContent=
+      `${results.length} ${
+        results.length===1
+          ? "memory"
+          : "memories"
+      }`;
+
+  }
+
+}
 
 /* ---------- KEYBOARD SUPPORT ---------- */
 
