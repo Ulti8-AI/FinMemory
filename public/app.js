@@ -891,14 +891,21 @@ views.replay=()=>{
 };
 
 
-views.patterns=()=>{
+ views.patterns=()=>{
+
   const t=monthTx();
   const c=catTotals(t);
   const i=inc(t);
   const e=exp(t);
+
+  const expenses=t.filter(
+    x=>x.type==="expense"
+  );
+
   const days={};
 
-  t.filter(x=>x.type==="expense").forEach(x=>{
+  expenses.forEach(x=>{
+
     const d=new Date(
       x.transaction_date+"T00:00:00"
     ).toLocaleDateString(
@@ -907,54 +914,155 @@ views.patterns=()=>{
     );
 
     days[d]=(days[d]||0)+Number(x.amount);
+
   });
 
-  const top=Object.entries(days)
-    .sort((a,b)=>b[1]-a[1])[0];
+  const topDay=
+    Object.entries(days)
+      .sort((a,b)=>b[1]-a[1])[0];
+
+  const topCategory=
+    Object.entries(c)
+      .sort((a,b)=>b[1]-a[1])[0];
+
+  const average=
+    expenses.length
+      ? e/expenses.length
+      : 0;
+
+  const sortedCategories=
+    Object.entries(c)
+      .sort((a,b)=>b[1]-a[1]);
+
+  const weekdayOrder=[
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday"
+  ];
+
+  const weekdayRows=weekdayOrder
+    .filter(d=>days[d])
+    .map(d=>`
+      <div class="pattern-row">
+
+        <span>${d}</span>
+
+        <div class="pattern-bar">
+          <i
+            style="
+              width:${
+                topDay
+                  ? Math.min(
+                      100,
+                      days[d]/topDay[1]*100
+                    )
+                  : 0
+              }%
+            "
+          ></i>
+        </div>
+
+        <b>${money(days[d])}</b>
+
+      </div>
+    `)
+    .join("");
 
   return `
+
+    <div class="pattern-intro">
+
+      <p class="eyebrow">YOUR MONEY PATTERNS</p>
+
+      <h3>
+        Your spending has a rhythm.
+      </h3>
+
+      <p>
+        FinMemory looks across your money memories
+        to reveal patterns in how you spend and save.
+      </p>
+
+    </div>
+
+
     <div class="grid stats">
 
       ${stat(
         "Savings rate",
         i
-          ? Math.max(0,(i-e)/i*100).toFixed(1)+"%"
+          ? Math.max(
+              0,
+              (i-e)/i*100
+            ).toFixed(1)+"%"
           : "—",
         "positive"
       )}
 
-      ${stat("Transactions",t.length)}
+      ${stat(
+        "Average spend",
+        average
+          ? money(average)
+          : "—"
+      )}
 
       ${stat(
-        "Categories used",
-        Object.keys(c).length
+        "Top category",
+        topCategory
+          ? esc(topCategory[0])
+          : "—"
       )}
 
       ${stat(
         "Top day",
-        top?top[0]:"—"
+        topDay
+          ? esc(topDay[0])
+          : "—"
       )}
 
     </div>
 
-    <div class="grid two" style="margin-top:16px">
+
+    <div
+      class="grid two"
+      style="margin-top:16px"
+    >
 
       <div class="card">
-        <h3>Category pattern</h3>
-        ${bars(c)}
-      </div>
 
-      <div class="card">
-        <h3>Day-of-week pattern</h3>
+        <div class="card-head">
+          <h3>Where your money goes</h3>
+        </div>
 
         ${
-          top
+          sortedCategories.length
+            ? bars(c)
+            : `
+              <div class="empty">
+                Not enough data yet.
+              </div>
+            `
+        }
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="card-head">
+          <h3>When you spend</h3>
+        </div>
+
+        ${
+          weekdayRows
             ? `
-              <p class="kpi">${esc(top[0])}</p>
-              <p class="muted">
-                ${money(top[1])} spent on your
-                highest-spend weekday this month.
-              </p>
+              <div class="pattern-list">
+                ${weekdayRows}
+              </div>
             `
             : `
               <div class="empty">
@@ -966,9 +1074,51 @@ views.patterns=()=>{
       </div>
 
     </div>
+
+
+    ${
+      topCategory
+        ? `
+          <div
+            class="card"
+            style="margin-top:16px"
+          >
+
+            <div class="card-head">
+              <h3>Pattern insight</h3>
+            </div>
+
+            <div class="pattern-insight">
+
+              <div class="pattern-insight-icon">
+                ✦
+              </div>
+
+              <div>
+
+                <b>
+                  ${esc(topCategory[0])}
+                </b>
+
+                <p>
+                  This is your largest spending
+                  category this month at
+                  <strong>
+                    ${money(topCategory[1])}
+                  </strong>.
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+        `
+        : ""
+    }
+
   `;
 };
-
 
 views.detective=()=>{
   const t=monthTx();
