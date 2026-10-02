@@ -1342,20 +1342,181 @@ views.goals=()=>`
   </div>
 `;
 
+ views.recurring=()=>{
 
-views.recurring=()=>`
-  <div class="card">
+  const recurring=state.transactions
+    .filter(t=>t.is_recurring)
+    .slice(0,12);
 
-    <h3>Recurring money</h3>
+  return `
 
-    <p class="muted">
-      Keep track of payments and income that repeat.
-      Automation will be added in a future feature pass.
-    </p>
+    <div class="recurring-intro">
 
-  </div>
-`;
+      <p class="eyebrow">RECURRING MONEY</p>
 
+      <h3>Remember what repeats.</h3>
+
+      <p>
+        Keep an eye on regular payments and income
+        so recurring money never catches you by surprise.
+      </p>
+
+    </div>
+
+
+    <div class="grid stats">
+
+      ${stat(
+        "Recurring items",
+        recurring.length
+      )}
+
+      ${stat(
+        "Monthly recurring",
+        recurring.length
+          ? money(
+              recurring
+                .filter(x=>x.type==="expense")
+                .reduce(
+                  (sum,x)=>sum+Number(x.amount||0),
+                  0
+                )
+            )
+          : "—"
+      )}
+
+      ${stat(
+        "Income repeats",
+        recurring.filter(
+          x=>x.type==="income"
+        ).length
+      )}
+
+      ${stat(
+        "Expense repeats",
+        recurring.filter(
+          x=>x.type==="expense"
+        ).length
+      )}
+
+    </div>
+
+
+    <div
+      class="card"
+      style="margin-top:16px"
+    >
+
+      <div class="card-head">
+
+        <div>
+          <h3>Your recurring money</h3>
+
+          <p class="muted">
+            Regular money memories you've marked as recurring.
+          </p>
+        </div>
+
+        <button
+          class="primary"
+          id="recurringAdd"
+        >
+          + Add recurring
+        </button>
+
+      </div>
+
+
+      ${
+        recurring.length
+
+          ? `
+            <div class="recurring-list">
+
+              ${recurring.map(t=>`
+
+                <div class="recurring-item">
+
+                  <div class="recurring-item-main">
+
+                    <div class="recurring-icon">
+                      ${t.type==="income"?"↗":"↘"}
+                    </div>
+
+                    <div>
+
+                      <b>
+                        ${esc(t.title)}
+                      </b>
+
+                      <div class="row-sub">
+                        ${esc(t.category)}
+                        · ${dateText(t.transaction_date)}
+                      </div>
+
+                    </div>
+
+                  </div>
+
+
+                  <div class="recurring-item-right">
+
+                    <div
+                      class="amount ${
+                        t.type==="income"
+                          ? "positive"
+                          : "negative"
+                      }"
+                    >
+                      ${
+                        t.type==="income"
+                          ? "+"
+                          : "−"
+                      }${money(t.amount)}
+                    </div>
+
+                    <span class="recurring-badge">
+                      Repeats
+                    </span>
+
+                  </div>
+
+                </div>
+
+              `).join("")}
+
+            </div>
+          `
+
+          : `
+            <div class="recurring-empty">
+
+              <div class="recurring-empty-icon">
+                ↻
+              </div>
+
+              <b>No recurring money yet</b>
+
+              <span>
+                Add a regular payment or income and
+                FinMemory will keep it in this section.
+              </span>
+
+              <button
+                class="ghost"
+                id="recurringEmptyAdd"
+              >
+                Add your first recurring item
+              </button>
+
+            </div>
+          `
+      }
+
+    </div>
+
+  `;
+};
 
 /* ---------- CALCULATOR ---------- */
 
