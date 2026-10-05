@@ -3580,7 +3580,7 @@ document.querySelectorAll(".auth-tab").forEach(b=>
 );
 
 
-/* ---------- AUTH FORM ---------- */
+ /* ---------- AUTH FORM ---------- */
 
 $("authForm").addEventListener(
   "submit",
@@ -3588,8 +3588,11 @@ $("authForm").addEventListener(
 
     e.preventDefault();
 
-    $("authMessage").textContent=
-      "Working…";
+    const message=$("authMessage");
+    const button=
+      $("authForm").querySelector(
+        'button[type="submit"]'
+      );
 
     const email=
       $("authEmail").value.trim();
@@ -3597,52 +3600,154 @@ $("authForm").addEventListener(
     const password=
       $("authPassword").value;
 
-    if(authMode==="signup"){
+    if(!email || !password){
+
+      message.textContent=
+        "Enter your email and password.";
+
+      return;
+    }
+
+    message.textContent=
+      authMode==="signup"
+        ? "Creating your account…"
+        : "Signing you in…";
+
+    if(button){
+
+      button.disabled=true;
+
+      button.dataset.originalText=
+        button.textContent;
+
+      button.textContent=
+        authMode==="signup"
+          ? "Creating account…"
+          : "Signing in…";
+    }
+
+    try{
+
+      if(authMode==="signup"){
+
+        const {
+          data,
+          error
+        }=await sb.auth.signUp({
+
+          email,
+
+          password,
+
+          options:{
+            data:{
+              display_name:
+                $("authName")
+                  .value
+                  .trim()
+            }
+          }
+
+        });
+
+        if(error){
+
+          message.textContent=
+            error.message;
+
+          return;
+        }
+
+        if(data.session){
+
+          message.textContent=
+            "Account created.";
+
+          return;
+        }
+
+        message.textContent=
+          "Account created. Check your email to confirm your account.";
+
+        return;
+      }
+
 
       const {
         data,
         error
-      }=await sb.auth.signUp({
+      }=await sb.auth.signInWithPassword({
+
         email,
-        password,
-        options:{
-          data:{
-            display_name:
-              $("authName").value.trim()
-          }
-        }
+
+        password
+
       });
 
-      if(error){
-
-        $("authMessage").textContent=
-          error.message;
-
-      }else{
-
-        $("authMessage").textContent=
-          data.session
-            ? "Account created."
-            : "Account created. Check your email if confirmation is enabled.";
-      }
-
-    }else{
-
-      const {error}=
-        await sb.auth.signInWithPassword({
-          email,
-          password
-        });
 
       if(error){
 
-        $("authMessage").textContent=
+        console.error(
+          "FinMemory login error:",
+          error
+        );
+
+        message.textContent=
           error.message;
+
+        return;
       }
+
+
+      if(data?.user){
+
+        message.textContent=
+          "Signed in. Loading FinMemory…";
+
+        /*
+          Do not clear or reset the auth form here.
+          The Supabase auth-state listener should
+          switch the app to the dashboard.
+        */
+
+        return;
+      }
+
+
+      message.textContent=
+        "We couldn't complete the login.";
+
+    }catch(error){
+
+      console.error(
+        "FinMemory authentication error:",
+        error
+      );
+
+      message.textContent=
+        error?.message ||
+        "Something went wrong. Please try again.";
+
+    }finally{
+
+      if(button){
+
+        button.disabled=false;
+
+        button.textContent=
+          button.dataset.originalText ||
+          (
+            authMode==="signup"
+              ? "Create account"
+              : "Log in"
+          );
+
+      }
+
     }
+
   }
 );
-
 
 /* ---------- START FINMEMORY ---------- */
 
