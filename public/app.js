@@ -2880,6 +2880,301 @@ if(e.target.closest("[data-delete-tx]")){
   }
 
   return;
+} 
+  if(
+  e.target.id==="recurringAdd" ||
+  e.target.id==="recurringEmptyAdd"
+){
+
+  const modal=document.createElement("div");
+
+  modal.className="fm-recurring-modal";
+
+  modal.innerHTML=`
+
+    <div class="fm-recurring-box">
+
+      <div class="fm-recurring-head">
+
+        <div>
+          <span class="fm-recurring-kicker">
+            RECURRING MONEY
+          </span>
+
+          <h3>Add recurring money</h3>
+
+          <p>
+            Tell FinMemory what repeats.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="fm-recurring-close"
+          data-recurring-close
+        >
+          ×
+        </button>
+
+      </div>
+
+      <form id="recurringForm">
+
+        <div class="fm-recurring-type">
+
+          <button
+            type="button"
+            class="fm-recurring-type-btn active"
+            data-recurring-type="expense"
+          >
+            <span>↘</span>
+            Expense
+          </button>
+
+          <button
+            type="button"
+            class="fm-recurring-type-btn"
+            data-recurring-type="income"
+          >
+            <span>↗</span>
+            Income
+          </button>
+
+        </div>
+
+        <label>
+          What is it?
+
+          <input
+            id="recurringTitle"
+            type="text"
+            placeholder="e.g. Monthly internet"
+            required
+          >
+        </label>
+
+        <label>
+          Amount
+
+          <div class="fm-recurring-amount">
+            <span>₦</span>
+
+            <input
+              id="recurringAmount"
+              type="number"
+              min="0.01"
+              step="0.01"
+              placeholder="0.00"
+              required
+            >
+          </div>
+        </label>
+
+        <label>
+          Category
+
+          <select
+            id="recurringCategory"
+            required
+          >
+            ${cats().map(c=>`
+              <option value="${esc(c.name)}">
+                ${esc(c.name)}
+              </option>
+            `).join("")}
+          </select>
+        </label>
+
+        <label>
+          Repeats
+
+          <select
+            id="recurringFrequency"
+            required
+          >
+            <option value="weekly">
+              Every week
+            </option>
+
+            <option value="monthly" selected>
+              Every month
+            </option>
+
+            <option value="yearly">
+              Every year
+            </option>
+          </select>
+        </label>
+
+        <label>
+          First date
+
+          <input
+            id="recurringDate"
+            type="date"
+            value="${today()}"
+            required
+          >
+        </label>
+
+        <label>
+          Note
+
+          <input
+            id="recurringNote"
+            type="text"
+            placeholder="Optional"
+          >
+        </label>
+
+        <button
+          type="submit"
+          class="primary fm-recurring-save"
+        >
+          Save recurring money
+        </button>
+
+      </form>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  let recurringType="expense";
+
+  const form=
+    modal.querySelector("#recurringForm");
+
+  const typeButtons=
+    modal.querySelectorAll(
+      ".fm-recurring-type-btn"
+    );
+
+  typeButtons.forEach(button=>{
+
+    button.addEventListener("click",()=>{
+
+      recurringType=
+        button.dataset.recurringType;
+
+      typeButtons.forEach(x=>{
+        x.classList.toggle(
+          "active",
+          x.dataset.recurringType===recurringType
+        );
+      });
+
+    });
+
+  });
+
+  modal
+    .querySelector("[data-recurring-close]")
+    .addEventListener("click",()=>{
+      modal.remove();
+    });
+
+  modal.addEventListener("click",e=>{
+
+    if(e.target===modal){
+      modal.remove();
+    }
+
+  });
+
+  form.addEventListener("submit",async e=>{
+
+    e.preventDefault();
+
+    const title=
+      modal
+        .querySelector("#recurringTitle")
+        .value
+        .trim();
+
+    const amount=Number(
+      modal
+        .querySelector("#recurringAmount")
+        .value
+    );
+
+    const category=
+      modal
+        .querySelector("#recurringCategory")
+        .value;
+
+    const frequency=
+      modal
+        .querySelector("#recurringFrequency")
+        .value;
+
+    const transaction_date=
+      modal
+        .querySelector("#recurringDate")
+        .value;
+
+    const note=
+      modal
+        .querySelector("#recurringNote")
+        .value
+        .trim() || null;
+
+    if(
+      !title ||
+      amount<=0 ||
+      !category ||
+      !transaction_date
+    ){
+
+      return toast(
+        "Check the recurring money details."
+      );
+
+    }
+
+    const user=
+      (await sb.auth.getUser()).data.user;
+
+    if(!user){
+      return toast("Please sign in first.");
+    }
+
+    const {error}=await sb
+      .from("transactions")
+      .insert({
+        user_id:user.id,
+        type:recurringType,
+        amount,
+        title,
+        category,
+        transaction_date,
+        note,
+        tags:[],
+        is_recurring:true,
+        recurring_frequency:frequency
+      });
+
+    if(error){
+
+      console.error(
+        "Recurring save error:",
+        error
+      );
+
+      return toast(error.message);
+
+    }
+
+    modal.remove();
+
+    toast("Recurring money saved.");
+
+    await refresh();
+
+  });
+
+  return;
 }
    if(e.target.id==="addBudget"){
 
