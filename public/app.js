@@ -233,25 +233,17 @@ async function init(){
       showAuth();
     }
 
-    sb.auth.onAuthStateChange(
-      (event,session)=>{
+   sb.auth.onAuthStateChange(
+  (event)=>{
 
-        if(event==="SIGNED_IN" && session){
+    if(event==="SIGNED_OUT"){
 
-          enter(session);
+      showAuth();
 
-          return;
+    }
 
-        }
-
-        if(event==="SIGNED_OUT"){
-
-          showAuth();
-
-        }
-
-      }
-    );
+  }
+);
 
   }catch(e){
 
@@ -3625,13 +3617,14 @@ document.querySelectorAll(".auth-tab").forEach(b=>
 
  /* ---------- AUTH FORM ---------- */
 
-$("authForm").addEventListener(
+ $("authForm").addEventListener(
   "submit",
   async e=>{
 
     e.preventDefault();
 
     const message=$("authMessage");
+
     const button=
       $("authForm").querySelector(
         'button[type="submit"]'
@@ -3651,23 +3644,20 @@ $("authForm").addEventListener(
       return;
     }
 
-    message.textContent=
-      authMode==="signup"
-        ? "Creating your account…"
-        : "Signing you in…";
-
     if(button){
 
       button.disabled=true;
-
-      button.dataset.originalText=
-        button.textContent;
 
       button.textContent=
         authMode==="signup"
           ? "Creating account…"
           : "Signing in…";
     }
+
+    message.textContent=
+      authMode==="signup"
+        ? "Creating your account…"
+        : "Signing you in…";
 
     try{
 
@@ -3701,10 +3691,12 @@ $("authForm").addEventListener(
           return;
         }
 
-        if(data.session){
+        if(data?.session){
 
           message.textContent=
             "Account created.";
+
+          await enter(data.session);
 
           return;
         }
@@ -3742,23 +3734,27 @@ $("authForm").addEventListener(
       }
 
 
-      if(data?.user){
+      if(!data?.session){
 
         message.textContent=
-          "Signed in. Loading FinMemory…";
-
-        /*
-          Do not clear or reset the auth form here.
-          The Supabase auth-state listener should
-          switch the app to the dashboard.
-        */
+          "Login completed, but no session was returned.";
 
         return;
       }
 
 
       message.textContent=
-        "We couldn't complete the login.";
+        "Signed in. Loading FinMemory…";
+
+
+      /*
+        Explicitly enter the app from the successful
+        login response instead of waiting for the
+        auth-state listener to do it.
+      */
+
+      await enter(data.session);
+
 
     }catch(error){
 
@@ -3778,12 +3774,9 @@ $("authForm").addEventListener(
         button.disabled=false;
 
         button.textContent=
-          button.dataset.originalText ||
-          (
-            authMode==="signup"
-              ? "Create account"
-              : "Log in"
-          );
+          authMode==="signup"
+            ? "Create account"
+            : "Log in";
 
       }
 
@@ -3791,7 +3784,6 @@ $("authForm").addEventListener(
 
   }
 );
-
 /* ---------- START FINMEMORY ---------- */
 
 init();
