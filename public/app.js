@@ -190,16 +190,86 @@ const monthTx=()=>state.transactions.filter(t=>t.transaction_date.slice(0,7)===t
 ].filter((x,i,a)=>
   a.findIndex(y=>y.name.toLowerCase()===x.name.toLowerCase())===i
 );
-const catTotals=a=>{let o={};a.filter(t=>t.type==="expense").forEach(t=>o[t.category]=(o[t.category]||0)+Number(t.amount));return o};
+ const catTotals=a=>{let o={};a.filter(t=>t.type==="expense").forEach(t=>o[t.category]=(o[t.category]||0)+Number(t.amount));return o};
 function toast(m){$("toast").textContent=m;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),2500)}
+
 async function init(){
-  try{const r=await fetch("/api/config"),c=await r.json();if(!c.ok)throw Error(c.error);
-    sb=window.supabase.createClient(c.supabaseUrl,c.supabaseKey);
-    const {data:{session}}=await sb.auth.getSession();
-    if(session)await enter(session);else showAuth();
-    sb.auth.onAuthStateChange(async(_,s)=>s?await enter(s):showAuth());
-  }catch(e){$("authMessage").textContent=e.message}
+
+  try{
+
+    const supabaseUrl=
+      "https://cgnlmbsdtqbkajtkqssm.supabase.co";
+
+    const supabaseKey=
+      "sb_publishable_k51uAkJt_K5K0SdMM5twdg_eada8Jtg";
+
+    if(!supabaseUrl || !supabaseKey){
+
+      throw new Error(
+        "Supabase configuration is missing."
+      );
+
+    }
+
+    sb=window.supabase.createClient(
+      supabaseUrl,
+      supabaseKey
+    );
+
+    const {
+      data:{
+        session
+      },
+      error
+    }=await sb.auth.getSession();
+
+    if(error){
+      throw error;
+    }
+
+    if(session){
+      await enter(session);
+    }else{
+      showAuth();
+    }
+
+    sb.auth.onAuthStateChange(
+      (event,session)=>{
+
+        if(event==="SIGNED_IN" && session){
+
+          enter(session);
+
+          return;
+
+        }
+
+        if(event==="SIGNED_OUT"){
+
+          showAuth();
+
+        }
+
+      }
+    );
+
+  }catch(e){
+
+    console.error(
+      "FinMemory initialization error:",
+      e
+    );
+
+    showAuth();
+
+    $("authMessage").textContent=
+      e.message ||
+      "Unable to connect to FinMemory.";
+
+  }
+
 }
+ 
 function showAuth(){$("authScreen").classList.remove("hidden");$("appShell").classList.add("hidden")}
 async function enter(session){$("authScreen").classList.add("hidden");$("appShell").classList.remove("hidden");$("userEmail").textContent=session.user.email||"Account";await load();render()}
 async function load(){
@@ -215,33 +285,6 @@ async function load(){
   state.profile=q[0].data||{id:uid,display_name:"",currency:"NGN"};state.transactions=q[1].data||[];state.categories=q[2].data||[];state.budgets=q[3].data||[];state.goals=q[4].data||[];
   if(!q[0].data)await sb.from("profiles").insert(state.profile);
 }
-  async function init(){
-  try{
-    const supabaseUrl="https://cgnlmbsdtqbkajtkqssm.supabase.co";
-    const supabaseKey="sb_publishable_k51uAkJt_K5K0SdMM5twdg_eada8Jtg";
-
-    if(!supabaseUrl || !supabaseKey){
-      throw new Error("Supabase configuration is missing.");
-    }
-
-    sb=window.supabase.createClient(supabaseUrl,supabaseKey);
-
-    const {data:{session},error}=await sb.auth.getSession();
-    if(error) throw error;
-
-    if(session) await enter(session);
-    else showAuth();
-
-    sb.auth.onAuthStateChange(async(_,s)=>{
-      if(s) await enter(s);
-      else showAuth();
-    });
-
-  }catch(e){
-    console.error("FinMemory initialization error:",e);
-    $("authMessage").textContent=e.message||"Unable to connect to FinMemory.";
-  }
-} 
  function render(){
   const labels={
     overview:"Overview",
