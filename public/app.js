@@ -3615,49 +3615,56 @@ document.querySelectorAll(".auth-tab").forEach(b=>
 );
 
 
- /* ---------- AUTH FORM ---------- */
+  /* ---------- AUTH FORM ---------- */
 
- $("authForm").addEventListener(
-  "submit",
-  async e=>{
-
-    e.preventDefault();
+$("authSubmit").addEventListener(
+  "click",
+  async ()=>{
 
     const message=$("authMessage");
 
-    const button=
-      $("authForm").querySelector(
-        'button[type="submit"]'
-      );
+    const button=$("authSubmit");
 
     const email=
-      $("authEmail").value.trim();
+      $("authEmail")
+        .value
+        .trim();
 
     const password=
-      $("authPassword").value;
+      $("authPassword")
+        .value;
 
-    if(!email || !password){
+    if(!email){
 
       message.textContent=
-        "Enter your email and password.";
+        "Enter your email.";
+
+      $("authEmail").focus();
 
       return;
     }
 
-    if(button){
+    if(!password){
 
-      button.disabled=true;
+      message.textContent=
+        "Enter your password.";
 
-      button.textContent=
-        authMode==="signup"
-          ? "Creating account…"
-          : "Signing in…";
+      $("authPassword").focus();
+
+      return;
     }
 
     message.textContent=
       authMode==="signup"
         ? "Creating your account…"
         : "Signing you in…";
+
+    button.disabled=true;
+
+    button.textContent=
+      authMode==="signup"
+        ? "Creating account…"
+        : "Signing in…";
 
     try{
 
@@ -3692,9 +3699,6 @@ document.querySelectorAll(".auth-tab").forEach(b=>
         }
 
         if(data?.session){
-
-          message.textContent=
-            "Account created.";
 
           await enter(data.session);
 
@@ -3747,14 +3751,7 @@ document.querySelectorAll(".auth-tab").forEach(b=>
         "Signed in. Loading FinMemory…";
 
 
-      /*
-        Explicitly enter the app from the successful
-        login response instead of waiting for the
-        auth-state listener to do it.
-      */
-
       await enter(data.session);
-
 
     }catch(error){
 
@@ -3769,16 +3766,12 @@ document.querySelectorAll(".auth-tab").forEach(b=>
 
     }finally{
 
-      if(button){
+      button.disabled=false;
 
-        button.disabled=false;
-
-        button.textContent=
-          authMode==="signup"
-            ? "Create account"
-            : "Log in";
-
-      }
+      button.textContent=
+        authMode==="signup"
+          ? "Create account"
+          : "Log in";
 
     }
 
