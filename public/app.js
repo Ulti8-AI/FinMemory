@@ -3615,82 +3615,128 @@ document.querySelectorAll(".auth-tab").forEach(b=>
 );
 
 
-  /* ---------- AUTH FORM ---------- */
+   /* ---------- AUTH FORM ---------- */
 
-$("authSubmit").addEventListener(
-  "click",
-  async ()=>{
+const authSubmitButton=$("authSubmit");
 
-    const message=$("authMessage");
+if(authSubmitButton){
 
-    const button=$("authSubmit");
+  authSubmitButton.addEventListener(
+    "click",
+    async ()=>{
 
-    const email=
-      $("authEmail")
-        .value
-        .trim();
+      const message=$("authMessage");
 
-    const password=
-      $("authPassword")
-        .value;
+      const email=
+        $("authEmail").value.trim();
 
-    if(!email){
+      const password=
+        $("authPassword").value;
+
+      if(!email){
+
+        message.textContent=
+          "Enter your email.";
+
+        $("authEmail").focus();
+
+        return;
+      }
+
+      if(!password){
+
+        message.textContent=
+          "Enter your password.";
+
+        $("authPassword").focus();
+
+        return;
+      }
+
+      authSubmitButton.disabled=true;
+
+      authSubmitButton.textContent=
+        authMode==="signup"
+          ? "Creating account…"
+          : "Signing in…";
 
       message.textContent=
-        "Enter your email.";
+        authMode==="signup"
+          ? "Creating your account…"
+          : "Signing you in…";
 
-      $("authEmail").focus();
+      try{
 
-      return;
-    }
+        if(!sb){
 
-    if(!password){
+          throw new Error(
+            "FinMemory is still connecting to Supabase. Please wait a moment and try again."
+          );
 
-      message.textContent=
-        "Enter your password.";
+        }
 
-      $("authPassword").focus();
+        if(authMode==="signup"){
 
-      return;
-    }
+          const {
+            data,
+            error
+          }=await sb.auth.signUp({
 
-    message.textContent=
-      authMode==="signup"
-        ? "Creating your account…"
-        : "Signing you in…";
+            email,
 
-    button.disabled=true;
+            password,
 
-    button.textContent=
-      authMode==="signup"
-        ? "Creating account…"
-        : "Signing in…";
+            options:{
+              data:{
+                display_name:
+                  $("authName")
+                    .value
+                    .trim()
+              }
+            }
 
-    try{
+          });
 
-      if(authMode==="signup"){
+          if(error){
+
+            message.textContent=
+              error.message;
+
+            return;
+          }
+
+          if(data?.session){
+
+            await enter(data.session);
+
+            return;
+          }
+
+          message.textContent=
+            "Account created. Check your email to confirm your account.";
+
+          return;
+        }
+
 
         const {
           data,
           error
-        }=await sb.auth.signUp({
+        }=await sb.auth.signInWithPassword({
 
           email,
 
-          password,
-
-          options:{
-            data:{
-              display_name:
-                $("authName")
-                  .value
-                  .trim()
-            }
-          }
+          password
 
         });
 
+
         if(error){
+
+          console.error(
+            "FinMemory login error:",
+            error
+          );
 
           message.textContent=
             error.message;
@@ -3698,85 +3744,48 @@ $("authSubmit").addEventListener(
           return;
         }
 
-        if(data?.session){
 
-          await enter(data.session);
+        if(!data?.session){
+
+          message.textContent=
+            "Login completed, but no session was returned.";
 
           return;
         }
 
+
         message.textContent=
-          "Account created. Check your email to confirm your account.";
-
-        return;
-      }
+          "Signed in. Loading FinMemory…";
 
 
-      const {
-        data,
-        error
-      }=await sb.auth.signInWithPassword({
+        await enter(data.session);
 
-        email,
-
-        password
-
-      });
-
-
-      if(error){
+      }catch(error){
 
         console.error(
-          "FinMemory login error:",
+          "FinMemory authentication error:",
           error
         );
 
         message.textContent=
-          error.message;
+          error?.message ||
+          "Something went wrong. Please try again.";
 
-        return;
+      }finally{
+
+        authSubmitButton.disabled=false;
+
+        authSubmitButton.textContent=
+          authMode==="signup"
+            ? "Create account"
+            : "Log in";
+
       }
-
-
-      if(!data?.session){
-
-        message.textContent=
-          "Login completed, but no session was returned.";
-
-        return;
-      }
-
-
-      message.textContent=
-        "Signed in. Loading FinMemory…";
-
-
-      await enter(data.session);
-
-    }catch(error){
-
-      console.error(
-        "FinMemory authentication error:",
-        error
-      );
-
-      message.textContent=
-        error?.message ||
-        "Something went wrong. Please try again.";
-
-    }finally{
-
-      button.disabled=false;
-
-      button.textContent=
-        authMode==="signup"
-          ? "Create account"
-          : "Log in";
 
     }
+  );
 
-  }
-);
+}
 /* ---------- START FINMEMORY ---------- */
 
 init();
