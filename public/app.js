@@ -3555,6 +3555,10 @@ document.addEventListener("input",e=>{
 
 }
 
+  /* ---------- END CLICK EVENTS ---------- */
+
+});
+
 /* ---------- KEYBOARD SUPPORT ---------- */
 
 document.addEventListener("keydown",e=>{
