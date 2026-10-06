@@ -3683,7 +3683,6 @@ if(authSubmitButton){
           }=await sb.auth.signUp({
 
             email,
-
             password,
 
             options:{
@@ -3718,18 +3717,15 @@ if(authSubmitButton){
           return;
         }
 
-
         const {
           data,
           error
         }=await sb.auth.signInWithPassword({
 
           email,
-
           password
 
         });
-
 
         if(error){
 
@@ -3744,7 +3740,6 @@ if(authSubmitButton){
           return;
         }
 
-
         if(!data?.session){
 
           message.textContent=
@@ -3753,10 +3748,8 @@ if(authSubmitButton){
           return;
         }
 
-
         message.textContent=
           "Signed in. Loading FinMemory…";
-
 
         await enter(data.session);
 
