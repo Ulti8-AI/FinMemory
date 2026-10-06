@@ -3619,7 +3619,7 @@ document.querySelectorAll(".auth-tab").forEach(b=>
 );
 
 
-   /* ---------- AUTH FORM ---------- */
+    /* ---------- AUTH FORM ---------- */
 
 const authSubmitButton=$("authSubmit");
 
@@ -3638,22 +3638,20 @@ if(authSubmitButton){
         $("authPassword").value;
 
       if(!email){
-
-        message.textContent=
-          "Enter your email.";
-
+        message.textContent="Enter your email.";
         $("authEmail").focus();
-
         return;
       }
 
       if(!password){
-
-        message.textContent=
-          "Enter your password.";
-
+        message.textContent="Enter your password.";
         $("authPassword").focus();
+        return;
+      }
 
+      if(!sb){
+        message.textContent=
+          "FinMemory is not connected to Supabase yet.";
         return;
       }
 
@@ -3667,40 +3665,51 @@ if(authSubmitButton){
       message.textContent=
         authMode==="signup"
           ? "Creating your account…"
-          : "Signing you in…";
+          : "Connecting to Supabase…";
 
       try{
 
-        if(!sb){
-
-          throw new Error(
-            "FinMemory is still connecting to Supabase. Please wait a moment and try again."
-          );
-
-        }
-
         if(authMode==="signup"){
+
+          const result=
+            await Promise.race([
+
+              sb.auth.signUp({
+                email,
+                password,
+                options:{
+                  data:{
+                    display_name:
+                      $("authName")
+                        .value
+                        .trim()
+                  }
+                }
+              }),
+
+              new Promise((_,reject)=>
+                setTimeout(
+                  ()=>reject(
+                    new Error(
+                      "Supabase took too long to respond. Check your connection and Supabase project."
+                    )
+                  ),
+                  15000
+                )
+              )
+
+            ]);
 
           const {
             data,
             error
-          }=await sb.auth.signUp({
-
-            email,
-            password,
-
-            options:{
-              data:{
-                display_name:
-                  $("authName")
-                    .value
-                    .trim()
-              }
-            }
-
-          });
+          }=result;
 
           if(error){
+            console.error(
+              "FinMemory signup error:",
+              error
+            );
 
             message.textContent=
               error.message;
@@ -3709,6 +3718,9 @@ if(authSubmitButton){
           }
 
           if(data?.session){
+
+            message.textContent=
+              "Account created. Loading FinMemory…";
 
             await enter(data.session);
 
@@ -3721,15 +3733,47 @@ if(authSubmitButton){
           return;
         }
 
+
+        message.textContent=
+          "Contacting Supabase…";
+
+
+        const result=
+          await Promise.race([
+
+            sb.auth.signInWithPassword({
+              email,
+              password
+            }),
+
+            new Promise((_,reject)=>
+              setTimeout(
+                ()=>reject(
+                  new Error(
+                    "Supabase did not respond within 15 seconds."
+                  )
+                ),
+                15000
+              )
+            )
+
+          ]);
+
+
         const {
           data,
           error
-        }=await sb.auth.signInWithPassword({
+        }=result;
 
-          email,
-          password
 
-        });
+        console.log(
+          "FinMemory login response:",
+          {
+            hasSession:!!data?.session,
+            error
+          }
+        );
+
 
         if(error){
 
@@ -3744,18 +3788,22 @@ if(authSubmitButton){
           return;
         }
 
+
         if(!data?.session){
 
           message.textContent=
-            "Login completed, but no session was returned.";
+            "Supabase accepted the login but returned no session.";
 
           return;
         }
 
+
         message.textContent=
-          "Signed in. Loading FinMemory…";
+          "Login successful. Loading your money memories…";
+
 
         await enter(data.session);
+
 
       }catch(error){
 
@@ -3766,7 +3814,7 @@ if(authSubmitButton){
 
         message.textContent=
           error?.message ||
-          "Something went wrong. Please try again.";
+          "Something went wrong while signing in.";
 
       }finally{
 
@@ -3783,6 +3831,11 @@ if(authSubmitButton){
   );
 
 }
+
+
+/* ---------- START FINMEMORY ---------- */
+
+init();
 /* ---------- START FINMEMORY ---------- */
 
 init();
