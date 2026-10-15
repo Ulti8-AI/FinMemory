@@ -3628,8 +3628,7 @@ if(authSubmitButton){
        authSubmitButton.addEventListener(
       "click",
       async ()=>{
-        alert("AUTH HANDLER REACHED");
-
+         
       const message=$("authMessage");
 
       const email=
