@@ -257,6 +257,7 @@ async function init(){
 
     const message = $("authMessage");
 
+     
     if(message){
       message.textContent =
         e.message ||
@@ -265,8 +266,10 @@ async function init(){
 
   }
 
- 
+}
+
 function showAuth(){$("authScreen").classList.remove("hidden");$("appShell").classList.add("hidden")}
+
  
 async function enter(session){
   $("userEmail").textContent =
