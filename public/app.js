@@ -3736,7 +3736,8 @@ if(authSubmitButton){
 
 
         message.textContent=
-          "Contacting Supabase…";
+          "Contacting Supabase…"; 
+        console.log("FM DEBUG: Starting Supabase login");
 
 
         const result=
@@ -3765,6 +3766,10 @@ if(authSubmitButton){
           data,
           error
         }=result;
+        console.log("FM DEBUG: Supabase returned", {
+  hasSession: !!data?.session,
+  error: error?.message || null
+});
 
 
         console.log(
