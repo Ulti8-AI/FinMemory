@@ -245,6 +245,7 @@ async function init(){
   }
 );
 
+   
   }catch(e){
 
     console.error(
@@ -254,16 +255,30 @@ async function init(){
 
     showAuth();
 
-    $("authMessage").textContent=
-      e.message ||
-      "Unable to connect to FinMemory.";
+    const message = $("authMessage");
+
+    if(message){
+      message.textContent =
+        e.message ||
+        "Unable to connect to FinMemory.";
+    }
 
   }
 
-}
  
 function showAuth(){$("authScreen").classList.remove("hidden");$("appShell").classList.add("hidden")}
-async function enter(session){$("authScreen").classList.add("hidden");$("appShell").classList.remove("hidden");$("userEmail").textContent=session.user.email||"Account";await load();render()}
+ 
+async function enter(session){
+  $("userEmail").textContent =
+    session.user.email || "Account";
+
+  await load();
+  render();
+
+  $("authScreen").classList.add("hidden");
+  $("appShell").classList.remove("hidden");
+}
+
 async function load(){
   const uid=(await sb.auth.getUser()).data.user.id;
   const q=await Promise.all([
