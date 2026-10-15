@@ -3856,6 +3856,4 @@ if(authSubmitButton){
 /* ---------- START FINMEMORY ---------- */
 
 init();
-/* ---------- START FINMEMORY ---------- */
-
-init();
+ 
